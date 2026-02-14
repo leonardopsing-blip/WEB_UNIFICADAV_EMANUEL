@@ -1,0 +1,2498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Cloud Campus">
+    <meta name="format-detection" content="telephone=no">
+
+<meta name="theme-color" content="#050505">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
+    <script src="config.js"></script>
+<title>Emmanuel | Cloud Campus</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        
+        /* --- iOS / iPhone compat (sin cambiar estructura) --- */
+        html { height: 100%; -webkit-text-size-adjust: 100%; }
+        body {
+            min-height: calc(var(--vh, 1vh) * 100);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+        }
+        .app-layout { min-height: calc(var(--vh, 1vh) * 100); }
+        button, a, [role="button"] { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+        input, textarea, select { font-size: 16px; }
+        .nav-bar, #mobile-menu-btn, #loader, #intro-screen, #login-screen { -webkit-transform: translateZ(0); transform: translateZ(0); }
+        /* Smooth scrolling inside panels on iOS */
+        .scroll-area, .content, .main-content, .panel, .card, .modal, .swal2-container { -webkit-overflow-scrolling: touch; }
+        /* Backdrop-filter prefix for iOS */
+/* --- 1. SISTEMA DE DISEÑO (LUJO & OSCURIDAD) --- */
+        :root {
+            --bg-body: #050505;
+            --surface: #101010;
+            --surface-glass: rgba(20, 20, 20, 0.85);
+            --gold: #D4AF37; 
+            --gold-gradient: linear-gradient(135deg, #D4AF37 0%, #aa8a2e 100%);
+            --gold-glow: rgba(212, 175, 55, 0.2);
+            --text-main: #ffffff;
+            --text-muted: #888;
+            --border: 1px solid rgba(255, 255, 255, 0.08);
+            --radius: 24px;
+            --input-bg: #1a1a1a;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; user-select: none; }
+        
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-body);
+            background-image: radial-gradient(circle at 100% 0%, rgba(212, 175, 55, 0.08), transparent 40%);
+            color: var(--text-main);
+            margin: 0; padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            font-size: 16px;
+        }
+
+        /* --- 2. INTRO CINEMATOGRÁFICA --- */
+        #intro-screen {
+            position: fixed; inset: 0; z-index: 9999;
+            background: #000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            animation: finishIntro 0.8s ease-in-out 3.5s forwards; /* Duración ajustada para leer el texto */
+            pointer-events: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .intro-logo {
+            font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; color: transparent;
+            background: var(--gold-gradient); -webkit-background-clip: text;
+            opacity: 0; transform: scale(0.9);
+            animation: logoReveal 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards;
+            line-height: 1.2;
+        }
+        .intro-sub {
+            color: #666; font-size: 0.9rem; letter-spacing: 3px; text-transform: uppercase; margin-top: 15px;
+            opacity: 0; transform: translateY(20px);
+            animation: subReveal 1s ease-out 0.8s forwards;
+        }
+        @keyframes logoReveal { to { opacity: 1; transform: scale(1); } }
+        @keyframes subReveal { to { opacity: 1; transform: translateY(0); } }
+        @keyframes finishIntro { to { opacity: 0; visibility: hidden; } }
+
+        /* --- 3. UI COMPONENTS --- */
+        .app-layout {
+            max-width: 1400px; margin: 0 auto; 
+            display: grid; min-height: 100vh;
+            opacity: 0; animation: fadeIn 1s ease-out 2.6s forwards;
+        }
+
+        /* Card System */
+        .card {
+            background: var(--surface); border: var(--border); border-radius: var(--radius);
+            padding: 24px; margin-bottom: 20px; position: relative; overflow: hidden;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+            transition: transform 0.2s;
+        }
+        
+        .glass-header {
+            background: var(--surface-glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-bottom: var(--border); position: sticky; top: 0; z-index: 40;
+            padding: 15px 24px; display: flex; align-items: center; justify-content: space-between;
+            margin: -24px -24px 24px -24px;
+        }
+        .header-title { font-weight: 600; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; }
+
+        /* Inputs Modernos */
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; color: var(--gold); font-size: 0.8rem; margin-bottom: 8px; font-weight: 600; letter-spacing: 0.5px; }
+        
+        input, select, textarea {
+            width: 100%; padding: 16px; background: var(--input-bg);
+            border: 1px solid #333; border-radius: 16px;
+            color: white; font-family: inherit; font-size: 1rem;
+            transition: 0.3s;
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--gold); box-shadow: 0 0 15px var(--gold-glow) inset; }
+
+        /* Botones */
+        .btn {
+            width: 100%; padding: 18px; border: none; border-radius: 16px;
+            font-weight: 700; font-size: 0.95rem; letter-spacing: 1px; cursor: pointer;
+            text-transform: uppercase; transition: 0.3s;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .btn-gold { background: var(--gold-gradient); color: #000; box-shadow: 0 5px 20px var(--gold-glow); }
+        .btn-gold:active { transform: scale(0.98); }
+        .btn-outline { background: transparent; border: 1px solid #444; color: #fff; }
+
+        /* --- 4. NAVIGATION (Mobile & Desktop) --- */
+        
+        /* Mobile FAB (Toggle Menu) */
+        #mobile-menu-btn {
+            position: fixed; bottom: calc(25px + env(safe-area-inset-bottom)); right: calc(25px + env(safe-area-inset-right)); z-index: 200;
+            width: 60px; height: 60px; border-radius: 50%;
+            background: var(--gold-gradient); color: #000;
+            border: none; box-shadow: 0 10px 25px rgba(212, 175, 55, 0.4);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; cursor: pointer;
+            transition: transform 0.2s;
+        }
+        #mobile-menu-btn:active { transform: scale(0.9); }
+
+        /* Mobile Bottom Nav (Ocultable) */
+        .nav-bar {
+            position: fixed; bottom: calc(100px + env(safe-area-inset-bottom)); right: calc(25px + env(safe-area-inset-right)); /* Posición relativa al botón */
+            width: 200px; background: rgba(15, 15, 15, 0.98);
+            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px); border: var(--border); border-radius: 20px;
+            display: flex; flex-direction: column; padding: 10px; gap: 5px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9); z-index: 199;
+            
+            /* Animación de ocultar/mostrar */
+            transform-origin: bottom right;
+            transform: scale(0); opacity: 0; pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .nav-bar.active {
+            transform: scale(1); opacity: 1; pointer-events: all;
+        }
+
+        .nav-item {
+            color: #aaa; font-size: 1rem; cursor: pointer; transition: 0.3s;
+            padding: 12px 15px; display: flex; align-items: center; gap: 12px;
+            border-radius: 12px;
+        }
+        .nav-item i { width: 25px; text-align: center; }
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        .nav-item.active { 
+            background: var(--gold-glow); color: var(--gold); 
+        }
+        
+        /* Texto del menú móvil */
+        .nav-item::after { content: attr(data-label); font-weight: 600; font-size: 0.9rem; }
+
+        /* Desktop Sidebar */
+        @media (min-width: 1024px) {
+            .app-layout { grid-template-columns: 320px 1fr; gap: 40px; padding: 40px; }
+            
+            #mobile-menu-btn { display: none; } /* Ocultar botón móvil en escritorio */
+
+            .nav-bar {
+                position: sticky; top: 40px; bottom: auto; right: auto; left: auto;
+                width: 100%; max-width: none; height: fit-content;
+                background: var(--surface); padding: 30px; border-radius: var(--radius);
+                transform: none; opacity: 1; pointer-events: all;
+                box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+            }
+            
+            .nav-item { 
+                justify-content: flex-start; padding: 0 20px;
+                height: 55px; font-size: 1rem;
+            }
+            .nav-item i { font-size: 1.2rem; }
+            .nav-item::after { font-size: 1rem; margin-left: 10px; }
+            .nav-item.active { background: var(--gold-gradient); color: #000; box-shadow: 0 5px 20px var(--gold-glow); }
+        }
+
+        /* --- 5. MÓDULOS ESPECÍFICOS --- */
+        
+        /* Grid de Fotos (Reportes) */
+        .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+        .photo-upload-box {
+            aspect-ratio: 1; border: 2px dashed #444; border-radius: 12px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; position: relative; overflow: hidden; transition: 0.3s;
+            background: rgba(255,255,255,0.02);
+        }
+        .photo-upload-box:hover { border-color: var(--gold); background: rgba(212, 175, 55, 0.05); }
+        .photo-upload-box img { width: 100%; height: 100%; object-fit: cover; position: absolute; z-index: 1; display: none; }
+        .photo-upload-box i { font-size: 1.5rem; color: #666; margin-bottom: 5px; }
+        .photo-upload-box span { font-size: 0.6rem; color: #666; font-weight: bold; text-transform: uppercase; }
+
+        /* Lista de Tareas */
+        .task-card {
+            background: rgba(255,255,255,0.03); border-radius: 16px; padding: 20px;
+            border-left: 4px solid var(--text-muted); margin-bottom: 15px;
+        }
+        .task-card.pending { border-color: var(--danger); }
+        .task-card.done { border-color: var(--success); }
+        .task-card.graded { border-color: var(--gold); }
+
+        /* Media Embeds (Tareas / Aula) */
+        .media-preview {
+            margin-top: 10px;
+            background: rgba(0,0,0,0.35);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        .media-preview img, .media-preview video {
+            width: 100%;
+            max-height: 360px;
+            object-fit: contain;
+            display: block;
+            background: #000;
+        }
+        .media-preview iframe {
+            width: 100%;
+            height: 420px;
+            border: 0;
+            background: #000;
+        }
+        .media-preview audio {
+            width: 100%;
+            display: block;
+            padding: 10px;
+        }
+        .media-meta {
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+        }
+        .media-meta small { color: #888; }
+
+        /* Acordeón (Módulos / Semanas) */
+        .acc-item {
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+        .acc-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.03);
+        }
+        .acc-head .title { font-weight: 700; }
+        .acc-head .sub { color: #888; font-size: 0.8rem; }
+        .acc-body {
+            display: none;
+            padding: 16px;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .badge { padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
+        .bg-gold { background: var(--gold); color: black; }
+
+        /* Perfil Header */
+        .profile-card {
+            display: flex; flex-direction: column; align-items: center; margin-bottom: 20px;
+            padding: 20px; border-bottom: 1px solid #333;
+        }
+        .avatar-wrapper { position: relative; width: 100px; height: 100px; margin-bottom: 15px; }
+        .avatar-img { width: 100%; height: 100%; border-radius: 50%; border: 3px solid var(--gold); object-fit: cover; box-shadow: 0 0 25px var(--gold-glow); }
+        .edit-btn { position: absolute; bottom: 0; right: 0; background: #fff; color: #000; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; cursor: pointer; }
+
+        /* Loader Global */
+        #loader {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000;
+            display: none; align-items: center; justify-content: center; flex-direction: column;
+        }
+        .spinner {
+            width: 50px; height: 50px; border: 3px solid rgba(212, 175, 55, 0.1);
+            border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s infinite linear;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Login */
+        #login-screen {
+            position: fixed; inset: 0; z-index: 2000; background: var(--bg-body);
+            display: flex; align-items: center; justify-content: center; padding: 20px;
+            animation: fadeIn 0.5s ease-out 2.8s backwards;
+        }
+    
+/* ========= WOW Aula Cards (V8) ========= */
+.aula-module-block{margin-bottom:22px;}
+.aula-module-head{display:flex; justify-content:space-between; align-items:center; gap:12px; padding:8px 6px 14px 6px; border-bottom:1px solid rgba(255,255,255,0.06); margin-bottom:14px;}
+.aula-module-title{font-weight:800; font-size:1.1rem;}
+.mod-state-pill{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; font-size:0.8rem; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.35);}
+.mod-dot{width:10px; height:10px; border-radius:50%;}
+.mod-dot.green{background:var(--success);}
+.mod-dot.orange{background:var(--warning);}
+.mod-dot.red{background:var(--danger);}
+.mod-select{padding:8px 10px; border-radius:12px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.12); color:var(--text);}
+.mod-del-btn{padding:8px 10px;border-radius:12px;background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.12);color:#fff;cursor:pointer;}
+.mod-del-btn:hover{border-color:var(--danger);color:var(--danger);}
+
+.aula-card{position:relative; border-radius:18px; overflow:hidden; border:1px solid rgba(255,255,255,0.07); background:rgba(0,0,0,0.35); padding:18px 18px 16px 18px; margin-bottom:14px;}
+.aula-card::before{content:""; position:absolute; left:0; top:0; bottom:0; width:6px; background:var(--gold);}
+.aula-card-top{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:10px;}
+.aula-chip{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:rgba(212,175,55,0.16); border:1px solid rgba(212,175,55,0.35); color:var(--gold); font-weight:700; font-size:0.78rem;}
+.aula-week{color:rgba(255,255,255,0.35); font-size:0.82rem; white-space:nowrap; padding-top:4px;}
+.aula-title{font-size:1.35rem; font-weight:800; margin:0 0 8px 0;}
+.aula-desc{color:#bdbdbd; margin:0 0 14px 0; line-height:1.35;}
+.aula-btn{display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:12px; background:var(--gold); color:#000; font-weight:800; border:none; cursor:pointer;}
+.aula-mat{margin-top:12px; display:none; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08);}
+.aula-mat.show{display:block;}
+
+.timeline{margin-top:12px; border-top:1px solid rgba(255,255,255,0.08); padding-top:10px;}
+.timeline-item{padding:10px; border-radius:12px; border:1px solid rgba(255,255,255,0.08); background:rgba(0,0,0,0.28); margin-bottom:10px;}
+.timeline-meta{display:flex; justify-content:space-between; gap:10px; color:#888; font-size:0.82rem; margin-bottom:6px;}
+.timeline-note{display:inline-flex; gap:10px; align-items:center; margin-top:8px; padding:8px 10px; border-radius:10px; background:rgba(212,175,55,0.18); border:1px solid rgba(212,175,55,0.35); color:var(--gold);}
+.timeline-note.closed{background:rgba(0,255,0,0.08); border-color:rgba(0,255,0,0.22); color:var(--success);}
+
+</style>
+</head>
+<body>
+
+    <div id="intro-screen">
+        <div class="intro-logo">
+            <i class="fas fa-music" style="margin-right: 15px;"></i><br>
+            ESCUELA DE MÚSICA<br>EMANUEL
+        </div>
+        <div class="intro-sub">CREANDO ARTISTAS, CREANDO SUEÑOS</div>
+    </div>
+
+    <div id="loader">
+        <div class="spinner"></div>
+        <p style="margin-top:20px; color:var(--gold); font-size:0.8rem; letter-spacing:2px; font-weight:bold;">SINCRONIZANDO...</p>
+    </div>
+
+    <div id="login-screen">
+        <div style="width: 100%; max-width: 400px; text-align: center;">
+            <div style="margin-bottom: 40px;">
+                <h1 style="color:var(--gold); font-size:2.5rem; letter-spacing:1px; margin:0;">EMMANUEL</h1>
+                <small style="color:#666; letter-spacing:2px; text-transform:uppercase;">Acceso Seguro</small>
+            </div>
+            
+            <div class="card">
+                <div class="form-group">
+                    <input id="u-login" placeholder="USUARIO / CÓDIGO" style="text-align:center; text-transform:uppercase;">
+                </div>
+                <div class="form-group">
+                    <input type="password" id="p-login" placeholder="CONTRASEÑA" style="text-align:center;">
+                </div>
+                <button class="btn btn-gold" onclick="app.login()">
+                    INGRESAR <i class="fas fa-arrow-right"></i>
+                </button>
+                <p style="margin-top:20px; font-size:0.7rem; color:#444;">Sistema unificado para Alumnos y Docentes</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-app" class="app-layout" style="display:none;">
+        
+        <button id="mobile-menu-btn" onclick="app.toggleMenu()">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <aside>
+            <div class="card profile-card">
+                <div class="avatar-wrapper" onclick="document.getElementById('input-foto-perfil').click()">
+                    <img src="https://via.placeholder.com/150" id="profile-img" class="avatar-img" onerror="this.onerror=null;this.src='https://via.placeholder.com/150';">
+                    <div class="edit-btn"><i class="fas fa-camera"></i></div>
+                </div>
+                <input type="file" id="input-foto-perfil" hidden accept="image/*" onchange="app.actualizarFoto(this)">
+                
+                <h2 id="user-name" style="margin:0; font-size:1.4rem;">Usuario</h2>
+                <div style="display:flex; gap:10px; margin-top:5px; flex-wrap: wrap; justify-content: center;">
+                    <span id="user-role" class="badge bg-gold">ROL</span>
+                    <span id="user-inst" class="badge" style="background:#333; color:#aaa;">INST</span>
+                </div>
+            </div>
+
+            <nav class="nav-bar" id="nav-menu">
+                </nav>
+        </aside>
+
+        <main>
+            
+            <div id="view-home" class="view-section">
+                <div class="card">
+                    <div class="glass-header">
+                        <div class="header-title"><i class="fas fa-home" style="color:var(--gold)"></i> Dashboard</div>
+                        <div id="clock" style="font-family:monospace; color:var(--text-muted);">00:00</div>
+                    </div>
+                    <div style="text-align:center; padding:40px 0;">
+                        <h1 style="font-weight:200; font-size:2rem; color:#fff;">Bienvenido, <span id="welcome-name" style="color:var(--gold); font-weight:bold;">Usuario</span></h1>
+                        <p style="color:#666; max-width:400px; margin:10px auto;">Selecciona una opción del menú para comenzar tus actividades.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-asistencia" class="view-section" style="display:none;">
+                <div class="card">
+                    <div class="glass-header">
+                        <div class="header-title"><i class="fas fa-fingerprint" style="color:var(--gold)"></i> Marcación Biométrica</div>
+                    </div>
+                    
+                    <div style="display:flex; align-items:center; gap:10px; margin:20px 0; background:rgba(255,255,255,0.05); padding:15px; border-radius:12px;">
+                        <div id="gps-icon"><i class="fas fa-satellite-dish fa-spin"></i></div>
+                        <div>
+                            <div style="font-weight:bold; font-size:0.9rem;">Estado GPS</div>
+                            <div id="gps-status" style="font-size:0.75rem; color:#888;">Calibrando ubicación...</div>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+                        <button class="btn" style="background:#10b981; color:white; height:100px; flex-direction:column;" onclick="app.marcar('ENTRADA')">
+                            <i class="fas fa-sign-in-alt fa-2x"></i> ENTRADA
+                        </button>
+                        <button class="btn" style="background:#ef4444; color:white; height:100px; flex-direction:column;" onclick="app.marcar('SALIDA')">
+                            <i class="fas fa-sign-out-alt fa-2x"></i> SALIDA
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-reportes" class="view-section" style="display:none;">
+                <div class="card">
+                    <div class="glass-header">
+                        <div class="header-title"><i class="fas fa-clipboard-list" style="color:var(--gold)"></i> Reporte de Clase</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">SELECCIONAR ALUMNO</label>
+                        <select id="rep-alumno"><option>Cargando lista...</option></select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">NIVEL / AVANCE (1-10)</label>
+                        <input type="number" id="rep-nivel" placeholder="Ej: 5">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">EVIDENCIA FOTOGRÁFICA (OBLIGATORIO)</label>
+                        <div class="photo-grid">
+                            <div class="photo-upload-box" onclick="document.getElementById('f-clase').click()">
+                                <img id="preview-clase">
+                                <i class="fas fa-users"></i><span>CLASE</span>
+                                <input type="file" id="f-clase" hidden accept="image/*" onchange="app.previewImage(this, 'preview-clase')">
+                            </div>
+                            <div class="photo-upload-box" onclick="document.getElementById('f-teoria').click()">
+                                <img id="preview-teoria">
+                                <i class="fas fa-book"></i><span>TEORÍA</span>
+                                <input type="file" id="f-teoria" hidden accept="image/*" onchange="app.previewImage(this, 'preview-teoria')">
+                            </div>
+                            <div class="photo-upload-box" onclick="document.getElementById('f-practica').click()">
+                                <img id="preview-practica">
+                                <i class="fas fa-guitar"></i><span>PRÁCTICA</span>
+                                <input type="file" id="f-practica" hidden accept="image/*" onchange="app.previewImage(this, 'preview-practica')">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">OBSERVACIONES</label>
+                        <textarea id="rep-obs" rows="3" placeholder="Detalles de la lección, tareas asignadas, comportamiento..."></textarea>
+                    </div>
+
+                    <button class="btn btn-gold" onclick="app.enviarReporte()">ENVIAR REPORTE</button>
+                </div>
+            </div>
+
+            
+            <div id="view-resumen-reportes" class="view-section" style="display:none;">
+                <div class="card">
+                    <div class="glass-header">
+                        <div class="header-title"><i class="fas fa-clipboard-list" style="color:var(--gold)"></i> Resumen de Reportes (Admin)</div>
+                        <small style="color:var(--text-muted); font-family:monospace;">Solo ADMIN / CEO</small>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-top:10px;">
+                        <div class="form-group">
+                            <label class="form-label">PROFESOR</label>
+                            <select id="rep-sum-profe"></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">ALUMNO</label>
+                            <select id="rep-sum-alumno"></select>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                        <div class="form-group">
+                            <label class="form-label">DESDE</label>
+                            <input type="date" id="rep-sum-from">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">HASTA</label>
+                            <input type="date" id="rep-sum-to">
+                        </div>
+                    </div>
+
+                    <button class="btn btn-gold" onclick="app.renderResumenReportes(true)">APLICAR FILTROS</button>
+
+                    <div id="rep-sum-stats" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-top:16px;"></div>
+                    <div id="rep-sum-top" style="margin-top:12px;"></div>
+                    <div id="rep-sum-list" style="margin-top:12px;"></div>
+                </div>
+            </div>
+
+<div id="view-gestion-tareas" class="view-section" style="display:none;">
+                
+                <div class="card">
+                    <div class="glass-header">
+                        <div class="header-title"><i class="fas fa-plus-circle" style="color:var(--gold)"></i> Nueva Tarea</div>
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                        <div class="form-group">
+                            <label class="form-label">DESTINATARIO</label>
+                            <select id="task-dest"></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">ADJUNTO (Opcional)</label>
+                            <input type="file" id="task-file" style="padding:13px;">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <input id="task-tit" placeholder="Título de la Tarea">
+                    </div>
+                    <div class="form-group">
+                        <textarea id="task-desc" rows="2" placeholder="Descripción e instrucciones..."></textarea>
+                    </div>
+                    <button class="btn btn-gold" onclick="app.crearTarea()">PUBLICAR TAREA</button>
+                </div>
+
+                <h3 style="margin:30px 0 15px; padding-left:10px; border-left:4px solid var(--gold);">Entregas Recientes</h3>
+                <div id="profe-entregas-list">Cargando...</div>
+            </div>
+
+            
+            <div id="view-notas" class="view-section" style="display:none;">
+                <div class="card">
+                    <div class="glass-header">
+                        <div class="header-title"><i class="fas fa-chart-line" style="color:var(--gold)"></i> Notas</div>
+                        <small style="color:var(--text-muted); font-family:monospace;">Acumulado por tareas</small>
+                    </div>
+
+                    <div id="notas-filters" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:15px; margin-top:10px;">
+                        <div class="form-group">
+                            <label class="form-label">ALUMNO</label>
+                            <select id="notas-alumno"></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">INSTRUMENTO</label>
+                            <select id="notas-inst"></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">PROFESOR</label>
+                            <select id="notas-profe"></select>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-gold" style="margin-top:10px;" onclick="app.renderNotas(true)"><i class="fas fa-filter"></i> APLICAR</button>
+                </div>
+
+                <div id="notas-summary">Cargando...</div>
+            </div>
+
+<div id="view-tareas-alumno" class="view-section" style="display:none;">
+                <div class="card" style="background:var(--gold-gradient); color:black;">
+                    <h2 style="margin:0;"><i class="fas fa-book-reader"></i> Mis Tareas</h2>
+                    <p style="margin:5px 0 0 0; opacity:0.8;">Revisa y sube tus evidencias a tiempo.</p>
+                </div>
+                <div id="alumno-tareas-list">Cargando...</div>
+            </div>
+
+            <div id="view-aula" class="view-section" style="display:none;">
+                <div class="card">
+                    <div class="glass-header">
+                        <div class="header-title"><i class="fas fa-layer-group" style="color:var(--gold)"></i> Aula: Módulos y Semanas</div>
+                        <small id="aula-sync" style="color:var(--text-muted); font-family:monospace;">SYNC</small>
+                    </div>
+                    <div id="aula-list">Cargando...</div>
+                </div>
+
+                <div class="card" id="aula-admin-card" style="display:none;">
+                    <div class="glass-header">
+                        <div class="header-title"><i class="fas fa-plus" style="color:var(--gold)"></i> Publicar Material</div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                        <div class="form-group">
+                            <label class="form-label">MÓDULO (DESIGNABLE)</label>
+                            <input id="aula-modulo" placeholder="Ej: Módulo 1 - Fundamentos">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">SEMANA</label>
+                            <input id="aula-semana" placeholder="Ej: Semana 2">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">TÍTULO</label>
+                        <input id="aula-titulo" placeholder="Tema / clase / actividad">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">DESCRIPCIÓN</label>
+                        <textarea id="aula-desc" rows="3" placeholder="Instrucciones, links, etc."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">ARCHIVO (Audio / PDF / Video / Imagen)</label>
+                        <input type="file" id="aula-file" style="padding:13px;">
+                    </div>
+
+                    <button class="btn btn-gold" onclick="app.publicarMaterial()">PUBLICAR EN AULA</button>
+                    <p style="margin-top:12px; color:#666; font-size:0.75rem;">Nota: Se asignará automáticamente a tu instrumento.</p>
+                </div>
+            </div>
+
+
+             <div id="view-admin" class="view-section" style="display:none;">
+                <div class="card">
+                    <div class="glass-header"><div class="header-title">Crear Usuario</div></div>
+                    <input id="adm-u" placeholder="Usuario (Ej: GUITARRA01)" style="margin-bottom:10px; text-transform:uppercase;">
+                    <input id="adm-p" placeholder="Contraseña" style="margin-bottom:10px;">
+                    <input id="adm-n" placeholder="Nombre Completo" style="margin-bottom:10px;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
+                        <select id="adm-r">
+                            <option value="ALUMNO">ALUMNO</option>
+                            <option value="PROFESOR">PROFESOR</option>
+                            <option value="ADMIN">ADMIN</option>
+                        </select>
+                        <select id="adm-i">
+                            <option value="PIANO">PIANO</option>
+                            <option value="GUITARRA">GUITARRA</option>
+                            <option value="BAJO">BAJO</option>
+                            <option value="VIOLIN">VIOLIN</option>
+                            <option value="CANTO PRESENCIAL">CANTO PRESENCIAL</option>
+                            <option value="CANTO ONLINE">CANTO ONLINE</option>
+                            <option value="BATERIA">BATERIA</option>
+                            <option value="GENERAL">GENERAL</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-gold" onclick="app.crearUsuario()">REGISTRAR USUARIO</button>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        
+        // iPhone/Safari: corrige 100vh (barra dinámica) sin tocar estructura
+        (function(){
+            function setVh(){
+                document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
+            }
+            setVh();
+            window.addEventListener('resize', setVh, {passive:true});
+            window.addEventListener('orientationchange', function(){ setTimeout(setVh, 350); }, {passive:true});
+        })();
+
+        // PWA (Android/iOS): registra Service Worker para servir como "app" instalada.
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(() => {});
+            });
+        }
+// =========================================================
+        // LÓGICA DEL SISTEMA (JAVASCRIPT PURO)
+        // =========================================================
+        
+        const API_URL = (window.APP_CONFIG && window.APP_CONFIG.API_URL) || "https://script.google.com/macros/s/AKfycbzvRJML40Z2Pi4JMt6QUK0QzAcgJd5fWte8GO_3euDJ9M_kItD5AvRaq_NKOwowfsoJFw/exec";
+        
+        const app = {
+            user: null,
+            data: null,
+            gps: "Sin Señal",
+            _syncOk: true,
+
+            // --- INICIALIZACIÓN ---
+            init: function() {
+                // Reloj
+                setInterval(() => {
+                    const d = new Date();
+                    const el = document.getElementById('clock');
+                    if(el) el.innerText = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                }, 1000);
+
+                // GPS
+                if(navigator.geolocation) {
+                    navigator.geolocation.watchPosition(
+                        (p) => {
+                            this.gps = `${p.coords.latitude},${p.coords.longitude}`;
+                            const stat = document.getElementById('gps-status');
+                            const icon = document.getElementById('gps-icon');
+                            if(stat) {
+                                stat.innerText = "GPS Activo y Preciso";
+                                stat.style.color = "#10b981";
+                                icon.innerHTML = '<i class="fas fa-satellite-dish" style="color:#10b981"></i>';
+                            }
+                        },
+                        (err) => console.warn("GPS Off")
+                    );
+                }
+            },
+
+            loading: (show) => document.getElementById('loader').style.display = show ? 'flex' : 'none',
+
+            toggleMenu: function() {
+                const nav = document.getElementById('nav-menu');
+                const btn = document.getElementById('mobile-menu-btn');
+                const isActive = nav.classList.contains('active');
+                
+                if (isActive) {
+                    nav.classList.remove('active');
+                    btn.innerHTML = '<i class="fas fa-bars"></i>';
+                } else {
+                    nav.classList.add('active');
+                    btn.innerHTML = '<i class="fas fa-times"></i>';
+                }
+            },
+
+            // --- AUTENTICACIÓN ---
+            login: async function() {
+                const u = document.getElementById('u-login').value.trim().toUpperCase();
+                const p = document.getElementById('p-login').value.trim();
+
+                if(!u || !p) return Swal.fire({title:'Datos Incompletos', icon:'warning', background:'#111', color:'#fff'});
+
+                this.loading(true);
+                try {
+                    const res = await fetch(`${API_URL}?op=traerTodo&ts=${Date.now()}`);
+                    this.data = await res.json();
+                    this.normalizeServerPayload();
+                    this.refreshCurrentAvatar();
+                    this._syncOk = true;
+
+                    const found = this.data.usuarios.find(x => String(x[0]).toUpperCase().trim() === u && String(x[1]).trim() === p);
+
+                    if(found) {
+                        const uid = String(found[0]||'').trim().toUpperCase();
+                        const rawAvatar = this.getUserAvatar(uid) || found[5] || '';
+                        this.user = {
+                            id: uid,
+                            pass: found[1],
+                            role: String(found[2]).toUpperCase(),
+                            name: found[3],
+                            avatar: rawAvatar,
+                            inst: found[6] ? String(found[6]).toUpperCase() : "GENERAL"
+                        };
+
+                        // Fallback local (solo si el Sheet no trae foto usable)
+                        this.applyLocalOverrides();
+
+                        // Releer avatar desde Sheet (por si el índice cambió o viene como fórmula/ID)
+                        try {
+                            const av2 = this.getUserAvatar(this.user.id);
+                            if(av2) this.user.avatar = av2;
+                        } catch(e) {}
+
+                        this.launchApp();
+                    } else {
+                        Swal.fire({title:'Credenciales Incorrectas', text:'Verifica usuario y contraseña', icon:'error', background:'#111', color:'#fff'});
+                    }
+                } catch(e) {
+                    console.error(e);
+                    Swal.fire({title:'Error de Conexión', text:'Revisa tu internet', icon:'error', background:'#111', color:'#fff'});
+                }
+                this.loading(false);
+            },
+
+            launchApp: function() {
+                // Transición
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-app').style.display = (window.innerWidth >= 1024) ? 'grid' : 'block';
+
+                // Set User Data
+                document.getElementById('profile-img').src = this.normalizeAvatarSrc(this.user.avatar, this.user.id);
+                this.refreshCurrentAvatar();
+                document.getElementById('user-name').innerText = this.user.name.split(' ')[0];
+                document.getElementById('welcome-name').innerText = this.user.name;
+                document.getElementById('user-role').innerText = this.user.role;
+                document.getElementById('user-inst').innerText = this.user.inst;
+
+                // Build Menu
+                const nav = document.getElementById('nav-menu');
+                nav.innerHTML = '';
+                
+                this.addMenuItem(nav, 'fas fa-home', 'Inicio', 'view-home');
+
+                // Aula (Módulos / Semanas)
+                this.addMenuItem(nav, 'fas fa-layer-group', 'Aula', 'view-aula');
+                this.renderAula();
+
+                if(this.user.role === 'ALUMNO') {
+                    this.addMenuItem(nav, 'fas fa-book-open', 'Tareas', 'view-tareas-alumno');
+                    this.renderTareasAlumno();
+                } else {
+                    // Profesores / Admin
+                    this.addMenuItem(nav, 'fas fa-fingerprint', 'Asistencia', 'view-asistencia');
+                    this.addMenuItem(nav, 'fas fa-clipboard-check', 'Reportes', 'view-reportes');
+                    this.addMenuItem(nav, 'fas fa-chalkboard-teacher', 'Gestión Tareas', 'view-gestion-tareas');
+                    this.addMenuItem(nav, 'fas fa-chart-line', 'Notas', 'view-notas');
+                    this.renderNotas();
+                    
+                    if(this.user.role === 'ADMIN' || this.user.role === 'CEO') {
+                        this.addMenuItem(nav, 'fas fa-clipboard-list', 'Resumen Reportes', 'view-resumen-reportes');
+                        this.addMenuItem(nav, 'fas fa-users-cog', 'Admin', 'view-admin');
+                    }
+
+                    this.setupProfeUI();
+                }
+
+                // Logout Button
+                const logout = document.createElement('div');
+                logout.className = 'nav-item';
+                logout.innerHTML = '<i class="fas fa-sign-out-alt" style="color:var(--danger)"></i>';
+                logout.setAttribute('data-label', 'Salir');
+                logout.onclick = () => location.reload();
+                nav.appendChild(logout);
+
+                // Aula: mostrar editor solo a docentes/admin
+                const aulaAdminCard = document.getElementById('aula-admin-card');
+                if(aulaAdminCard) aulaAdminCard.style.display = (this.user.role !== 'ALUMNO') ? 'block' : 'none';
+
+                // Auto-sync: para que el alumno vea nota/feedback sin rezar
+                this.startAutoSync();
+
+                // Activar primera vista
+                nav.children[0].click();
+            },
+
+            addMenuItem: function(container, icon, label, viewId) {
+                const div = document.createElement('div');
+                div.className = 'nav-item';
+                div.innerHTML = `<i class="${icon}"></i>`;
+                div.setAttribute('data-label', label);
+                div.onclick = () => {
+                    document.querySelectorAll('.view-section').forEach(v => v.style.display='none');
+                    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                    document.getElementById(viewId).style.display = 'block';
+                    div.classList.add('active');
+                    if(viewId==='view-notas') { try{ app.renderNotas(false); } catch(e){} }
+                    if(viewId==='view-resumen-reportes') { try{ app.renderResumenReportes(false); } catch(e){} }
+                    
+                    // Auto-close menu on mobile
+                    if(window.innerWidth < 1024) {
+                        document.getElementById('nav-menu').classList.remove('active');
+                        document.getElementById('mobile-menu-btn').innerHTML = '<i class="fas fa-bars"></i>';
+                    }
+                };
+                container.appendChild(div);
+            },
+
+            // --- LÓGICA DOCENTE ---
+            setupProfeUI: function() {
+                // Llenar Selects de Alumnos
+                const selRep = document.getElementById('rep-alumno');
+                const selTask = document.getElementById('task-dest');
+                
+                selRep.innerHTML = '<option value="">Selecciona Alumno</option>';
+                selTask.innerHTML = '<option value="TODOS">Todos mis alumnos</option>';
+
+                const misAlumnos = this.data.usuarios.filter(u => {
+                    const esAlumno = String(u[2]).toUpperCase() === 'ALUMNO';
+                    const mismoInst = u[6] && String(u[6]).toUpperCase() === this.user.inst;
+                    const esAdmin = ['ADMIN','CEO'].includes(this.user.role);
+                    return esAlumno && (esAdmin || mismoInst);
+                });
+
+                misAlumnos.forEach(a => {
+                    const opt = `<option value="${a[0]}">${a[3]}</option>`;
+                    selRep.innerHTML += opt;
+                    selTask.innerHTML += opt;
+                });
+
+                this.renderEntregasProfe();
+            },
+
+            // --- NOTAS (Profesor/Admin) ---
+            renderNotas: function(applyFilters=false) {
+                const wrap = document.getElementById('notas-summary');
+                const selAlu = document.getElementById('notas-alumno');
+                const selInst = document.getElementById('notas-inst');
+                const selPro = document.getElementById('notas-profe');
+                const filtersBox = document.getElementById('notas-filters');
+                if(!wrap || !selAlu || !selInst || !selPro || !filtersBox) return;
+
+                const users = (this.data.usuarios || []);
+                const tareas = (this.data.tareas || []);
+                const entregas = (this.data.entregas || []);
+
+                const isAdmin = (this.user.role === 'ADMIN' || this.user.role === 'CEO');
+
+                const getRol = (u) => String(u[2]||'').toUpperCase();
+                const getNombre = (u) => String(u[3]||u[0]||'').trim();
+                const getInst = (u) => String(u[6]||'GENERAL').toUpperCase();
+                const getAsign = (u) => String((u.length>7?u[7]:'')||'').toUpperCase(); // ProfesorAsign si existe
+
+                const profesores = users.filter(u => getRol(u) !== 'ALUMNO');
+                const alumnosAll = users.filter(u => getRol(u) === 'ALUMNO');
+
+                // Alumnos visibles según rol
+                let alumnosVis = alumnosAll.filter(u => {
+                    if(isAdmin) return true;
+                    // Profesor: por instrumento y, si existe, por asignación
+                    const instOk = (getInst(u) === this.user.inst);
+                    const asg = getAsign(u);
+                    const asgOk = asg ? (asg === String(this.user.id).toUpperCase()) : true;
+                    return instOk && asgOk;
+                });
+
+                // Construir opciones solo si no están inicializadas o si no aplican filtros
+                if(!applyFilters || selAlu.options.length === 0) {
+                    // Alumno
+                    selAlu.innerHTML = '<option value="">(Todos)</option>' + alumnosVis.map(a => `<option value="${a[0]}">${getNombre(a)} (${a[0]})</option>`).join('');
+
+                    // Instrumento
+                    const instSet = Array.from(new Set(alumnosAll.map(a => getInst(a)))).sort();
+                    selInst.innerHTML = '<option value="">(Todos)</option>' + instSet.map(i => `<option value="${i}">${i}</option>`).join('');
+
+                    // Profesor
+                    selPro.innerHTML = '<option value="">(Todos)</option>' + profesores.map(p => `<option value="${p[0]}">${getNombre(p)} (${p[0]})</option>`).join('');
+                }
+
+                // UI de filtros: en profesor solo alumno, en admin todos
+                if(!isAdmin) {
+                    selInst.parentElement.style.display = 'none';
+                    selPro.parentElement.style.display = 'none';
+                    filtersBox.style.gridTemplateColumns = '1fr';
+                } else {
+                    selInst.parentElement.style.display = 'block';
+                    selPro.parentElement.style.display = 'block';
+                    filtersBox.style.gridTemplateColumns = '1fr 1fr 1fr';
+                }
+
+                // Aplicar filtros (admin)
+                const fAlumno = String(selAlu.value||'').toUpperCase();
+                const fInst = String(selInst.value||'').toUpperCase();
+                const fPro = String(selPro.value||'').toUpperCase();
+
+                let alumnosFil = alumnosVis.slice();
+                if(isAdmin) {
+                    if(fAlumno) alumnosFil = alumnosFil.filter(a => String(a[0]).toUpperCase() === fAlumno);
+                    if(fInst) alumnosFil = alumnosFil.filter(a => getInst(a) === fInst);
+                    if(fPro) alumnosFil = alumnosFil.filter(a => getAsign(a) ? (getAsign(a) === fPro) : true);
+                } else {
+                    if(fAlumno) alumnosFil = alumnosFil.filter(a => String(a[0]).toUpperCase() === fAlumno);
+                }
+
+                if(alumnosFil.length === 0) {
+                    wrap.innerHTML = "<p style='color:#666'>No hay alumnos para mostrar con esos filtros.</p>";
+                    return;
+                }
+
+                const profeRow = (id) => users.find(u => String(u[0]) === String(id));
+
+                // Helper: tareas visibles para alumno
+                const tareasParaAlumno = (alumnoId) => {
+                    return tareas.filter(t => {
+                        const dest = String(t.destinatario||'TODOS').toUpperCase();
+                        if(dest !== 'TODOS' && dest !== String(alumnoId).toUpperCase()) return false;
+
+                        if(dest === 'TODOS') {
+                            const p = profeRow(t.profe);
+                            if(!p) return false;
+                            const esAdminProfe = ['ADMIN','CEO'].includes(String(p[2]||'').toUpperCase());
+                            const mismoInst = String(p[6]||'').toUpperCase() === getInst(users.find(x=>x[0]===alumnoId) || []);
+                            return esAdminProfe || mismoInst;
+                        }
+                        return true;
+                    });
+                };
+
+                const latestEntrega = (idTarea, alumnoId) => {
+                    const list = entregas.filter(e => String(e.id_tarea) === String(idTarea) && String(e.alumno) === String(alumnoId));
+                    if(list.length === 0) return null;
+                    list.sort((a,b)=>{
+                        const da = new Date(a.fecha||0).getTime();
+                        const db = new Date(b.fecha||0).getTime();
+                        return db-da;
+                    });
+                    return list[0];
+                };
+
+                // Render
+                let html = '';
+                alumnosFil.forEach(a => {
+                    const alumnoId = a[0];
+                    const tareasVis = tareasParaAlumno(alumnoId);
+
+                    const rows = [];
+                    tareasVis.forEach(t => {
+                        const ent = latestEntrega(t.id, alumnoId);
+                        const notaNum = ent ? this.toNum(ent.nota) : null;
+                        rows.push({
+                            tarea: t.titulo || '',
+                            profe: t.profe || '',
+                            fecha: ent ? (ent.fecha || '') : '',
+                            nota: ent ? (ent.nota || '') : '',
+                            feedback: ent ? (ent.feedback || '') : '',
+                            closed: (notaNum !== null && notaNum > 5)
+                        });
+                    });
+
+                    const calificadas = rows.filter(r => this.toNum(r.nota) !== null);
+                    const sum = calificadas.reduce((acc,r)=> acc + (this.toNum(r.nota)||0), 0);
+                    const avg = calificadas.length ? (sum / calificadas.length) : 0;
+
+                    const avatar = this.normalizeAvatarSrc(this.getUserAvatar(alumnoId), alumnoId);
+
+                    let table = '<div style="overflow:auto;"><table style="width:100%; border-collapse:collapse; font-size:0.9rem;">';
+                    table += '<tr style="color:#999; text-align:left;"><th style="padding:8px 6px;">Tarea</th><th style="padding:8px 6px;">Profesor</th><th style="padding:8px 6px;">Nota</th><th style="padding:8px 6px;">Fecha</th></tr>';
+                    rows.forEach(r => {
+                        const notaCell = r.nota ? `<span style="font-weight:800; color:${r.closed?'var(--success)':'var(--gold)'}">${r.nota}</span>` : '<span style="color:#666">-</span>';
+                        table += `<tr style="border-top:1px solid rgba(255,255,255,0.06);">
+                                    <td style="padding:8px 6px; color:#ddd;">${r.tarea}</td>
+                                    <td style="padding:8px 6px; color:#aaa;">${r.profe}</td>
+                                    <td style="padding:8px 6px;">${notaCell}</td>
+                                    <td style="padding:8px 6px; color:#777;">${r.fecha}</td>
+                                  </tr>`;
+                        if(r.feedback) {
+                            table += `<tr style="border-top:1px solid rgba(255,255,255,0.04);">
+                                        <td colspan="4" style="padding:8px 6px; color:#999; font-size:0.85rem;"><i class="fas fa-comment"></i> ${r.feedback}</td>
+                                      </tr>`;
+                        }
+                    });
+                    table += '</table></div>';
+
+                    html += `
+                        <div class="card">
+                            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <img src="${avatar}" style="width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid rgba(212,175,55,0.35);" onerror="this.onerror=null;this.src='https://via.placeholder.com/150';">
+                                    <div>
+                                        <div style="font-weight:900; font-size:1.05rem;">${getNombre(a)}</div>
+                                        <div style="color:#777; font-size:0.85rem;">${alumnoId} · ${getInst(a)} ${getAsign(a)?('· Prof: '+getAsign(a)) : ''}</div>
+                                    </div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <div style="color:#aaa; font-size:0.8rem;">Calificadas: <b>${calificadas.length}</b> / ${rows.length}</div>
+                                    <div style="color:var(--gold); font-weight:900;">Promedio: ${calificadas.length ? avg.toFixed(2) : '-'}</div>
+                                </div>
+                            </div>
+                            <div style="margin-top:14px;">${table}</div>
+                        </div>
+                    `;
+                });
+
+                wrap.innerHTML = html;
+            },
+
+            marcar: async function(tipo) {
+                this.loading(true);
+                await this.postData({accion:'registrarMarcacion', usuario:this.user.id, tipo:tipo, ubicacion:this.gps});
+                this.loading(false);
+                Swal.fire({title:tipo+' Registrada', icon:'success', background:'#111', color:'#fff'});
+            },
+
+            previewImage: function(input, imgId) {
+                if(input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = document.getElementById(imgId);
+                        img.src = e.target.result;
+                        img.style.display = 'block';
+                    }
+                    reader.readAsDataURL(input.files[0]);
+                }
+            },
+
+            enviarReporte: async function() {
+                const alu = document.getElementById('rep-alumno').value;
+                const niv = document.getElementById('rep-nivel').value;
+                const obs = document.getElementById('rep-obs').value;
+                const f1=document.getElementById('f-clase').files[0], f2=document.getElementById('f-teoria').files[0], f3=document.getElementById('f-practica').files[0];
+
+                if(!alu || !niv || !f1 || !f2 || !f3) return Swal.fire({title:'Faltan Datos', text:'Debes llenar nivel, alumno y las 3 fotos.', icon:'warning', background:'#111', color:'#fff'});
+
+                this.loading(true);
+                // Comprimir las 3 fotos en paralelo
+                const [b1, b2, b3] = await Promise.all([this.compressImage(f1), this.compressImage(f2), this.compressImage(f3)]);
+
+                await this.postData({
+                    accion: 'reporteDiario', profesor: this.user.id, alumno: alu,
+                    nivel: niv, obs: obs, f_clase: b1, f_teoria: b2, f_practica: b3
+                });
+
+                this.loading(false);
+                Swal.fire({title:'Reporte Guardado', icon:'success', background:'#111', color:'#fff'});
+                // Limpiar campos visuales
+                document.getElementById('rep-obs').value = '';
+                document.querySelectorAll('.photo-upload-box img').forEach(i => i.style.display='none');
+            },
+
+            crearTarea: async function() {
+                const dest = document.getElementById('task-dest').value;
+                const tit = document.getElementById('task-tit').value;
+                const desc = document.getElementById('task-desc').value;
+                const file = document.getElementById('task-file').files[0];
+
+                if(!tit) return Swal.fire({title:'Falta Título', icon:'warning', background:'#111', color:'#fff'});
+
+                this.loading(true);
+                let b64 = "", fname = "", mime = "";
+                if(file) {
+                    // Para archivos genéricos (PDF, Videos cortos, etc) usamos Base64 raw
+                    b64 = await this.fileToBase64(file);
+                    fname = file.name;
+                    mime = file.type;
+                }
+
+                await this.postData({
+                    accion: 'crearTarea', profesor: this.user.id, destinatario: dest,
+                    titulo: tit, desc: desc, archivoB64: b64, archivoNombre: fname, archivoMime: mime
+                });
+
+                // Actualizar datos locales
+                const refresh = await fetch(`${API_URL}?op=traerTodo&ts=${Date.now()}`);
+                this.data = await refresh.json();
+                        this.normalizeServerPayload();
+                        this.refreshCurrentAvatar();
+                this.renderEntregasProfe();
+                
+                this.loading(false);
+                Swal.fire({title:'Tarea Publicada', icon:'success', background:'#111', color:'#fff'});
+                document.getElementById('task-tit').value = "";
+                document.getElementById('task-desc').value = "";
+            },
+
+            renderEntregasProfe: function() {
+                const div = document.getElementById('profe-entregas-list');
+                if(!div) return;
+                div.innerHTML = '';
+
+                const misTareasIds = (this.data.tareas || []).filter(t => String(t.profe||'').trim().toUpperCase() === String(this.user.id||'').trim().toUpperCase()).map(t => String(t.id||'').trim());
+                const entregas = (this.data.entregas || []).filter(e => misTareasIds.includes(String(e.id_tarea||'').trim())).slice().reverse();
+
+                if(entregas.length === 0) {
+                    div.innerHTML = "<p style='color:#666'>No hay entregas recientes.</p>";
+                    return;
+                }
+
+                entregas.forEach(e => {
+                    const tareaInfo = (this.data.tareas || []).find(t => String(t.id) === String(e.id_tarea));
+                    const notaNum = this.toNum(e.nota);
+                    const statusClass = e.nota ? 'graded' : 'pending';
+                    const statusText = e.nota ? `NOTA: ${e.nota}` : 'PENDIENTE DE CALIFICAR';
+
+                    const fileUrl = e.archivo || e.archivoUrl || e.file || '';
+                    const fileName = e.archivoNombre || e.nombreArchivo || e.fileName || '';
+                    const fileMime = e.archivoMime || e.mime || '';
+                    const fileBlock = fileUrl ? this.renderFileBlock(fileUrl, fileName, fileMime) : '';
+                    const hist = this.getEntregasHistorial(e.id_tarea, e.alumno);
+                    const histHtml = this.renderEntregasTimeline(hist);
+                    const histId = `hist-${e.id_entrega}`;
+
+
+                    const btnHtml = e.nota ? '' : `<button class="btn btn-gold" style="padding:10px; font-size:0.8rem; margin-top:10px;" onclick="app.calificar('${e.id_entrega}', '${e.alumno}')">CALIFICAR</button>`;
+                                        div.innerHTML += `
+                        <div class="task-card ${statusClass}">
+                            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <img src="${this.normalizeAvatarSrc(this.getUserAvatar(e.alumno), e.alumno)}" style="width:34px; height:34px; border-radius:50%; object-fit:cover; border:2px solid rgba(212,175,55,0.4);" onerror="this.onerror=null;this.src='https://via.placeholder.com/150';">
+                                    <div>
+                                        <strong>${e.alumno}</strong><br>
+                                        <small style="color:#888;">Tarea: ${tareaInfo ? tareaInfo.titulo : '???'}</small>
+                                    </div>
+                                </div>
+                                <span class="badge ${e.nota ? 'bg-gold' : ''}" style="border:1px solid #444">${statusText}</span>
+                            </div>
+
+                            <div style="margin-top:12px; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px;">
+                                <i class="fas fa-comment"></i> "${e.comentario || ''}"
+                                ${fileBlock}
+                            </div>
+
+                            ${e.nota ? (this.toNum(e.nota) <= 5 ? `<div style="margin-top:10px; color:var(--danger); font-size:0.8rem;">Nota ≤ 5: el alumno podrá RESUBIR.</div>` : `<div style="margin-top:10px; color:var(--success); font-size:0.8rem; font-weight:800;">TAREA CERRADA ✅</div>`) : ''}
+                            
+                            <button class="btn btn-outline" style="padding:10px; font-size:0.8rem; margin-top:10px;" onclick="app.toggleAcc('${histId}')"><i class="fas fa-clock-rotate-left"></i> HISTORIAL</button>
+                            <div id="${histId}" style="display:none; margin-top:10px;">${histHtml}</div>
+                            ${btnHtml}
+                        </div>`;
+                });
+            },
+
+            calificar: async function(idE, alu) {
+                const { value: form } = await Swal.fire({
+                    title: 'Calificar a ' + alu,
+                    html: '<input id="sw-nota" class="swal2-input" type="number" placeholder="Nota 1-20">' +
+                          '<input id="sw-feed" class="swal2-input" placeholder="Feedback / Comentario">',
+                    focusConfirm: false,
+                    background:'#111', color:'#fff',
+                    preConfirm: () => [document.getElementById('sw-nota').value, document.getElementById('sw-feed').value]
+                });
+
+                if(form && form[0]) {
+                    this.loading(true);
+                    const notaNum = this.toNum(form[0]);
+                    const allowResubmit = (notaNum !== null && notaNum <= 5);
+                    await this.postData({accion:'calificarEntrega', idEntrega:idE, nota:form[0], feedback:form[1], allowResubmit: allowResubmit});
+                    // Refresh rápido
+                    const refresh = await fetch(`${API_URL}?op=traerTodo&ts=${Date.now()}`);
+                    this.data = await refresh.json();
+                        this.normalizeServerPayload();
+                        this.refreshCurrentAvatar();
+                    this.renderEntregasProfe();
+                    this.loading(false);
+                    Swal.fire({icon:'success', title:'Calificado', background:'#111', color:'#fff'});
+                }
+            },
+
+            // --- LÓGICA ALUMNO ---
+            renderTareasAlumno: function() {
+                const div = document.getElementById('alumno-tareas-list');
+                if(!div) return;
+                div.innerHTML = '';
+
+                const tareas = (this.data.tareas || []).slice().reverse();
+
+                const misTareas = tareas.filter(t => {
+                    const destRaw = (t.destinatario === undefined || t.destinatario === null) ? '' : String(t.destinatario);
+                    const dest = destRaw.trim().toUpperCase() || 'TODOS';
+                    if(dest === 'TODOS' || dest === 'ALL') {
+                        const profe = (this.data.usuarios || []).find(u => String(u[0]||'').trim().toUpperCase() === String(t.profe||'').trim().toUpperCase());
+                        if(!profe) return false;
+                        const esAdmin = ['ADMIN','CEO'].includes(String(profe[2]).toUpperCase());
+                        const mismoInst = String(profe[6]||'').toUpperCase() === this.user.inst;
+                        return esAdmin || mismoInst;
+                    }
+                    return dest === String(this.user.id).trim().toUpperCase();
+                });
+
+                if(misTareas.length === 0) {
+                    div.innerHTML = "<p style='color:#666'>No tienes tareas pendientes.</p>";
+                    return;
+                }
+
+                misTareas.forEach(t => {
+                    const entrega = this.getLatestEntrega(t.id, this.user.id);
+                    const notaNum = entrega ? this.toNum(entrega.nota) : null;
+                    const hist = this.getEntregasHistorial(t.id, this.user.id);
+                    const timelineHtml = this.renderEntregasTimeline(hist);
+
+                    let cardState = 'pending';
+                    let footer = '';
+
+                    const materialUrl = t.link || t.archivo || t.material || '';
+                    const materialName = t.archivoNombre || t.materialNombre || '';
+                    const materialMime = t.archivoMime || t.materialMime || '';
+                    const materialBlock = materialUrl ? this.renderFileBlock(materialUrl, materialName, materialMime, true) : '';
+
+                    const entregaFileUrl = entrega ? (entrega.archivo || entrega.archivoUrl || entrega.file || '') : '';
+                    const entregaFileName = entrega ? (entrega.archivoNombre || entrega.nombreArchivo || entrega.fileName || '') : '';
+                    const entregaFileMime = entrega ? (entrega.archivoMime || entrega.mime || '') : '';
+                    const entregaFileBlock = entregaFileUrl ? this.renderFileBlock(entregaFileUrl, entregaFileName, entregaFileMime) : '';
+
+                    if(entrega) {
+                        if(entrega.nota) {
+                            cardState = 'graded';
+                            footer = `
+                                <div style="margin-top:15px; background:var(--gold); color:black; padding:10px; border-radius:8px;">
+                                    <b>NOTA: ${entrega.nota}</b><br><small>${entrega.feedback||''}</small>
+                                </div>
+                                ${(notaNum !== null && notaNum > 5) ? `<div style="margin-top:10px; color:var(--success); font-weight:800;">TAREA CERRADA ✅</div>` : ''}
+                                ${entregaFileBlock}
+                            `;
+
+                            // Resubir si nota < 5
+                            if(notaNum !== null && notaNum <= 5) {
+                                footer += `
+                                    <hr style="border-color:#333; margin:15px 0;">
+                                    <div style="font-size:0.85rem; margin-bottom:8px; color:var(--danger); font-weight:700;">Puedes RESUBIR (nota &lt; 5)</div>
+                                    <input type="file" id="f2-${t.id}" style="margin-bottom:10px; padding:10px;">
+                                    <textarea id="c2-${t.id}" rows="2" placeholder="Comentario (¿qué corregiste?)" style="margin-bottom:10px;"></textarea>
+                                    <button class="btn btn-outline" onclick="app.entregarTarea('${t.id}', true)">RESUBIR TAREA</button>
+                                `;
+                            }
+
+                        } else {
+                            cardState = 'done';
+                            footer = `
+                                <div style="margin-top:15px; color:var(--success); border:1px solid var(--success); padding:10px; border-radius:8px;">
+                                    <i class="fas fa-check"></i> Tarea Enviada - Esperando revisión
+                                </div>
+                                ${entregaFileBlock}
+                            `;
+                        }
+                    } else {
+                        footer = `
+                            <hr style="border-color:#333; margin:15px 0;">
+                            <div style="font-size:0.8rem; margin-bottom:5px; color:var(--gold);">TU ENTREGA:</div>
+                            <input type="file" id="f-${t.id}" style="margin-bottom:10px; padding:10px;">
+                            <textarea id="c-${t.id}" rows="2" placeholder="Comentario opcional..." style="margin-bottom:10px;"></textarea>
+                            <button class="btn btn-outline" onclick="app.entregarTarea('${t.id}', false)">ENVIAR TAREA</button>
+                        `;
+                    }
+
+                    div.innerHTML += `
+                        <div class="task-card ${cardState}">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:10px; gap:10px;">
+                                <h3 style="margin:0;">${t.titulo}</h3>
+                                <div style="display:flex; align-items:center; gap:8px; min-width:0;">
+                                    <img src="${this.normalizeAvatarSrc(this.getUserAvatar(t.profe), t.profe)}" style="width:26px; height:26px; border-radius:50%; object-fit:cover; border:2px solid rgba(212,175,55,0.35);" onerror="this.onerror=null;this.src='https://via.placeholder.com/150';">
+                                    <small style="color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${t.profe}</small>
+                                </div>
+                            </div>
+                            <p style="color:#aaa; font-size:0.95rem;">${t.desc}</p>
+                            ${materialBlock}
+                            ${footer}
+                            ${timelineHtml}
+                        </div>`;
+                });
+            },
+
+            entregarTarea: async function(tid, isResubmit=false) {
+                const fileIn = document.getElementById(`${isResubmit ? 'f2' : 'f'}-${tid}`);
+                const commEl = document.getElementById(`${isResubmit ? 'c2' : 'c'}-${tid}`);
+                const comm = commEl ? commEl.value : '';
+                const f = fileIn ? fileIn.files[0] : null;
+                // Bloqueo: si ya fue aprobada (>5), nadie puede manipularla
+                const histLock = this.getEntregasHistorial(tid, this.user.id);
+                const isClosed = histLock.some(x => {
+                    const n = this.toNum(x.nota);
+                    return n !== null && n > 5;
+                });
+                if(isClosed) {
+                    return Swal.fire({title:'Tarea Cerrada', text:'Esta tarea ya fue aprobada (nota > 5). No se permiten más cambios.', icon:'info', background:'#111', color:'#fff'});
+                }
+
+
+                if(!f && !comm) return Swal.fire({title:'Vacío', text:'Adjunta archivo o escribe algo', icon:'warning', background:'#111', color:'#fff'});
+
+                
+
+                // Conteo previo para confirmar que el Sheet realmente registró esta entrega
+                // beforeCount ya calculado arriba
+this.loading(true);
+                let b64 = "", fn = "", mime = "";
+                if(f) {
+                    b64 = await this.fileToBase64(f);
+                    fn = f.name;
+                    mime = f.type || this.guessMimeFromName(fn);
+                }
+
+                await this.postData({
+                    accion:'entregarTarea', idTarea:tid, alumno:this.user.id,
+                    comentario:comm, archivoB64:b64, archivoNombre:fn, archivoMime:mime,
+                    reentrega: !!isResubmit
+                });
+
+                // Sync: refrescar desde backend para confirmar y obtener links reales (Drive)
+// (Dejar de inventar entregas locales "fantasma" que después no existen en el Sheet)
+                const beforeCount = this.getEntregasHistorial(tid, this.user.id).length;
+                const startMs = Date.now();
+                let confirmed = false;
+
+                for(let i=0; i<5; i++){
+                    try {
+                        await new Promise(r => setTimeout(r, 900 + (i*600)));
+                        const refresh = await fetch(`${API_URL}?op=traerTodo&ts=${Date.now()}`);
+                        this.data = await refresh.json();
+                        this.normalizeServerPayload();
+                        this.refreshCurrentAvatar();
+
+                        const histNow = this.getEntregasHistorial(tid, this.user.id);
+                        const latestNow = this.getLatestEntrega(tid, this.user.id);
+
+                        if(histNow.length > beforeCount) {
+                            const hasEvidence = latestNow && (String(latestNow.archivo||'').trim() || String(latestNow.comentario||'').trim());
+                            if(hasEvidence || (Date.now() - startMs > 3000)) confirmed = true;
+                        }
+
+                        this.renderTareasAlumno();
+                        if(this.user.role !== 'ALUMNO') this.renderEntregasProfe();
+
+                        if(confirmed) break;
+                    } catch(e) {}
+                }
+
+                if(!confirmed) {
+                    try {
+                        await Swal.fire({
+                            icon:'warning',
+                            title:'No se pudo confirmar la entrega',
+                            text:'No se confirmó archivo/comentario en el Sheet. Esto suele pasar por archivo pesado o internet inestable. Reintenta con un archivo más liviano (imagen JPG).',
+                            background:'#111',
+                            color:'#fff'
+                        });
+                    } catch(e) {}
+                }
+
+this.loading(false);
+                Swal.fire({icon:'success', title: isResubmit ? 'Resubido' : 'Enviado', background:'#111', color:'#fff'});
+            },
+
+            // --- ADMIN ---
+            crearUsuario: async function() {
+                const u = document.getElementById('adm-u').value;
+                const p = document.getElementById('adm-p').value;
+                const n = document.getElementById('adm-n').value;
+                const r = document.getElementById('adm-r').value;
+                const i = document.getElementById('adm-i').value;
+
+                if(!u || !p) return Swal.fire({title:'Faltan Datos', icon:'warning', background:'#111', color:'#fff'});
+                
+                this.loading(true);
+                await this.postData({accion:'crearUsuario', usuario:u, pass:p, nombre:n, rol:r, instrumento:i});
+                this.loading(false);
+                Swal.fire({icon:'success', title:'Usuario Creado', background:'#111', color:'#fff'});
+                document.getElementById('adm-u').value = "";
+                document.getElementById('adm-p').value = "";
+            },
+
+            // --- PERFIL ---
+            actualizarFoto: async function(input) {
+                if(input.files && input.files[0]) {
+                    this.loading(true);
+                    // Compresión (JPEG) y guardado
+                    const b64 = await this.compressImage(input.files[0]);
+                    const dataUri = `data:image/jpeg;base64,${b64}`;
+
+                    // Guardar en backend (si existe) + cache local (siempre)
+                    await this.postData({accion:'actualizarFotoPerfil', usuario:this.user.id, foto:b64});
+                    try { localStorage.setItem(this.localKey('avatar', this.user.id), dataUri); } catch(e) {}
+
+                    this.user.avatar = dataUri;
+                    document.getElementById('profile-img').src = dataUri;
+
+                    this.loading(false);
+                    Swal.fire({icon:'success', title:'Foto Actualizada', background:'#111', color:'#fff'});
+                }
+            },
+
+
+
+            // --- PERSISTENCIA LOCAL (fallback) ---
+            localKey: function(kind, id) { return `cc_${kind}_${id}`; },
+
+            applyLocalOverrides: function() {
+                // Avatar (hasta que el usuario la cambie)
+                try {
+                    const localAvatar = localStorage.getItem(this.localKey('avatar', this.user.id));
+                    if(localAvatar && (!this.user.avatar || String(this.user.avatar).includes('via.placeholder.com'))) this.user.avatar = localAvatar;
+                } catch(e) {}
+
+                // Cache local del Aula (por instrumento)
+                // OJO: ya NO manda sobre el Sheet. Solo se usa si el SYNC falla.
+                try {
+                    const k = `cc_aula_${this.user.inst}`;
+                    const cached = localStorage.getItem(k);
+                    if(cached) {
+                        this._aulaCache = JSON.parse(cached);
+                    } else {
+                        this._aulaCache = null;
+                    }
+                } catch(e) { this._aulaCache = null; }
+            },
+
+            normalizeServerPayload: function() {
+                // Garantiza arrays para evitar "fantasmas" cuando el backend no envía alguna key
+                if(!this.data || typeof this.data !== 'object') this.data = {};
+
+                const ensureArr = (k) => { if(!Array.isArray(this.data[k])) this.data[k] = []; };
+
+                ensureArr('usuarios');
+                ensureArr('tareas');
+                ensureArr('entregas');
+                ensureArr('asistencia');
+                ensureArr('reportes');
+                ensureArr('aula');
+                ensureArr('moduloEstados');
+
+                // Si el servidor SÍ respondió, el servidor manda: actualizamos cache local
+                // (y si viene vacío, limpiamos para que no se quede un módulo viejo pegado).
+                try {
+                    const k = `cc_aula_${this.user && this.user.inst ? this.user.inst : 'GENERAL'}`;
+                    if(this.data.aula.length > 0) {
+                        localStorage.setItem(k, JSON.stringify(this.data.aula));
+                        this._aulaCache = this.data.aula.slice();
+                    } else {
+                        localStorage.removeItem(k);
+                        this._aulaCache = null;
+                    }
+                } catch(e) {}
+            },
+
+            refreshCurrentAvatar: function() {
+                try {
+                    if(!this.user || !this.user.id) return;
+                    const raw = this.getUserAvatar(this.user.id);
+                    if(raw) this.user.avatar = raw;
+                    const img = document.getElementById('profile-img');
+                    if(img) img.src = this.normalizeAvatarSrc(this.user.avatar, this.user.id);
+                } catch(e) {}
+            },
+
+            startAutoSync: function() {
+                if(this._syncTimer) clearInterval(this._syncTimer);
+                // Cada 45s actualiza notas/feedback y aula
+                this._syncTimer = setInterval(() => this.syncData(false), 45000);
+            },
+
+            syncData: async function(showToast=true) {
+                try {
+                    const res = await fetch(`${API_URL}?op=traerTodo&ts=${Date.now()}`);
+                    this.data = await res.json();
+                    this.normalizeServerPayload();
+                    this.refreshCurrentAvatar();
+                    this._syncOk = true;
+                    if(this.user.role === 'ALUMNO') this.renderTareasAlumno();
+                    else this.renderEntregasProfe();
+                    if(this.user.role !== 'ALUMNO') this.renderNotas(false);
+                    this.renderAula();
+                    if(this.user.role === 'ADMIN' || this.user.role === 'CEO') { try{ this.renderResumenReportes(false); } catch(e){} }
+                    if(showToast) {
+                        const el = document.getElementById('aula-sync');
+                        if(el) el.innerText = 'SYNC OK';
+                    }
+                } catch(e) {
+                    this._syncOk = false;
+                    const el = document.getElementById('aula-sync');
+                    if(el) el.innerText = 'SYNC OFF';
+                }
+            },
+
+            // --- HELPERS: DATA / NUM ---
+            toNum: function(v) {
+                const n = parseFloat(String(v||'').replace(',', '.'));
+                return Number.isFinite(n) ? n : null;
+            },
+
+            escapeJs: function(s) {
+                return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+            },
+
+            getLatestEntrega: function(idTarea, alumno) {
+                const list = (this.data.entregas || []).filter(e => String(e.id_tarea||'').trim() === String(idTarea||'').trim() && String(e.alumno||'').trim().toUpperCase() === String(alumno||'').trim().toUpperCase());
+                if(list.length === 0) return null;
+                // Ordenar por fecha si existe
+                list.sort((a,b) => {
+                    const da = new Date(a.fecha || a.ts || a.timestamp || 0).getTime();
+                    const db = new Date(b.fecha || b.ts || b.timestamp || 0).getTime();
+                    return db - da;
+                });
+                return list[0];
+            },
+
+            getEntregasHistorial: function(idTarea, alumno) {
+                const list = (this.data.entregas || []).filter(e => String(e.id_tarea||'').trim() === String(idTarea||'').trim() && String(e.alumno||'').trim().toUpperCase() === String(alumno||'').trim().toUpperCase());
+                if(list.length === 0) return [];
+                // Orden ascendente por fecha
+                list.sort((a,b) => {
+                    const da = new Date(a.fecha || a.ts || a.timestamp || 0).getTime();
+                    const db = new Date(b.fecha || b.ts || b.timestamp || 0).getTime();
+                    return da - db;
+                });
+                return list;
+            },
+
+            renderEntregasTimeline: function(list) {
+                if(!list || list.length === 0) return '';
+                let html = '<div class="timeline">';
+                list.forEach((e, idx) => {
+                    const fileUrl = e.archivo || e.archivoUrl || e.file || '';
+                    const fileName = e.archivoNombre || e.nombreArchivo || e.fileName || '';
+                    const fileMime = e.archivoMime || e.mime || '';
+                    const fileBlock = fileUrl ? this.renderFileBlock(fileUrl, fileName, fileMime) : '';
+                    const notaNum = this.toNum(e.nota);
+                    const closed = (notaNum !== null && notaNum > 5);
+
+                    html += `
+                        <div class="timeline-item">
+                            <div class="timeline-meta">
+                                <div><b>#${idx+1}</b> ${e.reentrega === 'true' || e.reentrega === true ? 'Reentrega' : 'Entrega'}</div>
+                                <div>${e.fecha || ''}</div>
+                            </div>
+                            ${e.comentario ? `<div style="color:#ddd;"><i class="fas fa-comment"></i> ${e.comentario}</div>` : `<div style="color:#666;">(Sin comentario)</div>`}
+                            ${fileBlock}
+                            ${e.nota ? `<div class="timeline-note ${closed?'closed':''}"><b>NOTA:</b> ${e.nota} <span style="opacity:0.8;">${e.feedback || ''}</span></div>` : `<div style="margin-top:8px; color:#888;">Sin calificación aún.</div>`}
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                return html;
+            },
+
+            getUserAvatar: function(userId) {
+                const uid = String(userId||'').trim().toUpperCase();
+                const u = (this.data.usuarios || []).find(x => String(x[0]||'').trim().toUpperCase() === uid);
+                if(!u) return '';
+
+                // FotoPerfil normalmente está en índice 5, pero tu Sheet puede moverse con columnas nuevas.
+                // Estrategia: prioriza u[5], si no parece URL, busca en toda la fila un enlace válido.
+                const looksUrl = (v) => {
+                    const s = String(v||'').trim();
+                    if(!s) return false;
+                    if(s.startsWith('data:image/')) return true;
+                    if(s.startsWith('http://') || s.startsWith('https://')) return true;
+                    // a veces el Sheet deja SOLO el ID
+                    if(/^[a-zA-Z0-9_-]{10,}$/.test(s)) return true;
+                    // o fórmulas
+                    if(/^=\s*(HYPERLINK|IMAGE)\(/i.test(s)) return true;
+                    return false;
+                };
+
+                let raw = u[5] || '';
+                if(!looksUrl(raw)) {
+                    const found = u.find(looksUrl);
+                    raw = found || '';
+                }
+                return raw;
+            },
+
+            normalizeAvatarSrc: function(raw, userId) {
+                // Regla: SI el Sheet tiene URL, manda. El cache solo es respaldo.
+                const placeholder = 'https://via.placeholder.com/150';
+
+                // 1) Si viene algo desde el Sheet, normalizar y devolver
+                if(raw) {
+                    const s = String(raw).trim();
+                    let out = s;
+
+                    // Si viene como fórmula (HYPERLINK / IMAGE), extraer la URL
+                    try {
+                        const mH = out.match(/=\s*HYPERLINK\(\s*"([^"]+)"/i);
+                        if(mH && mH[1]) out = mH[1];
+                        const mI = out.match(/=\s*IMAGE\(\s*"([^"]+)"/i);
+                        if(mI && mI[1]) out = mI[1];
+                    } catch(e) {}
+
+                    // Drive share -> link directo (evita que "no cargue" en móvil)
+                    const direct = this.driveToDirect(out);
+
+                    // Para AVATAR: usar thumbnail de Drive (más estable que cargar el /view)
+                    const thumb = this.driveToThumb(direct, 400);
+                    out = thumb || direct;
+
+                    if(out.startsWith('data:') || out.startsWith('http://') || out.startsWith('https://')) {
+                        // Actualizar cache para modo offline
+                        try { localStorage.setItem(this.localKey('avatar', userId), out); } catch(e) {}
+                        return out;
+                    }
+
+                    // Si es base64 puro
+                    out = `data:image/jpeg;base64,${out}`;
+                    try { localStorage.setItem(this.localKey('avatar', userId), out); } catch(e) {}
+                    return out;
+                }
+
+                // 2) Fallback a cache si no hay foto en el Sheet
+                try {
+                    const cached = localStorage.getItem(this.localKey('avatar', userId));
+                    if(cached) return cached;
+                } catch(e) {}
+
+                return placeholder;
+            },
+
+            driveToDirect: function(url) {
+                const s = String(url||'').trim();
+                if(!s) return s;
+
+                // Si viene SOLO el ID de Drive (común si en Sheet usaron HYPERLINK), conviértelo
+                if(/^[a-zA-Z0-9_-]{10,}$/.test(s)) {
+                    return `https://drive.google.com/uc?export=view&id=${s}`;
+                }
+                // Si ya es uc?export=view, listo
+                if(s.includes('uc?export=view&id=')) return s;
+
+                // Capturar ID en distintos formatos
+                let id = '';
+                try {
+                    // ...id=FILEID
+                    const m1 = s.match(/[?&]id=([a-zA-Z0-9_-]{10,})/);
+                    if(m1 && m1[1]) id = m1[1];
+
+                    // .../d/FILEID/
+                    if(!id) {
+                        const m2 = s.match(/\/d\/([a-zA-Z0-9_-]{10,})/);
+                        if(m2 && m2[1]) id = m2[1];
+                    }
+
+                    // ...file/d/FILEID/view
+                    if(!id) {
+                        const m3 = s.match(/file\/d\/([a-zA-Z0-9_-]{10,})/);
+                        if(m3 && m3[1]) id = m3[1];
+                    }
+                } catch(e) {}
+
+                if(id) return `https://drive.google.com/uc?export=view&id=${id}`;
+                return s;
+            },
+
+            // Thumbnail para imágenes de Drive (ideal para fotos de perfil)
+            driveToThumb: function(url, size) {
+                const s = String(url||'').trim();
+                if(!s) return s;
+
+                // Evitar folders (no son imágenes)
+                if(s.includes('/folders/')) return '';
+
+                // Si ya es data: o url externa no-Drive, devolver tal cual
+                if(s.startsWith('data:image/')) return s;
+                const isHttp = s.startsWith('http://') || s.startsWith('https://');
+                const isDriveish = s.includes('drive.google.com') || s.includes('docs.google.com') || s.includes('googleusercontent.com') || /^[a-zA-Z0-9_-]{10,}$/.test(s);
+                if(isHttp && !isDriveish) return s;
+
+                let id = '';
+                try {
+                    const m1 = s.match(/[?&]id=([a-zA-Z0-9_-]{10,})/);
+                    if(m1 && m1[1]) id = m1[1];
+                    if(!id) {
+                        const m2 = s.match(/\/d\/([a-zA-Z0-9_-]{10,})/);
+                        if(m2 && m2[1]) id = m2[1];
+                    }
+                    if(!id) {
+                        const m3 = s.match(/file\/d\/([a-zA-Z0-9_-]{10,})/);
+                        if(m3 && m3[1]) id = m3[1];
+                    }
+                    // si viene SOLO el ID
+                    if(!id && /^[a-zA-Z0-9_-]{10,}$/.test(s)) id = s;
+                } catch(e) {}
+
+                if(!id) return s;
+
+                const w = Math.max(120, Math.min(1200, parseInt(size || 400, 10) || 400));
+                return `https://drive.google.com/thumbnail?id=${id}&sz=w${w}`;
+            },
+
+            // --- HELPERS: FILE PREVIEW / EMBEDS ---
+            guessMimeFromName: function(name) {
+                const n = String(name||'').toLowerCase();
+                if(n.endsWith('.png')) return 'image/png';
+                if(n.endsWith('.jpg') || n.endsWith('.jpeg')) return 'image/jpeg';
+                if(n.endsWith('.webp')) return 'image/webp';
+                if(n.endsWith('.mp4')) return 'video/mp4';
+                if(n.endsWith('.webm')) return 'video/webm';
+                if(n.endsWith('.mov')) return 'video/quicktime';
+                if(n.endsWith('.mp3')) return 'audio/mpeg';
+                if(n.endsWith('.wav')) return 'audio/wav';
+                if(n.endsWith('.ogg')) return 'audio/ogg';
+                if(n.endsWith('.pdf')) return 'application/pdf';
+                return '';
+            },
+
+            getDriveId: function(url) {
+                try {
+                    const u = String(url||'');
+                    const m1 = u.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+                    if(m1) return m1[1];
+                    const m2 = u.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+                    if(m2) return m2[1];
+                } catch(e) {}
+                return null;
+            },
+
+            renderFileBlock: function(url, name='', mime='', isMaterial=false) {
+                const safeUrl0 = String(url||'').trim();
+                if(!safeUrl0) return '';
+                const safeUrl = this.driveToDirect(safeUrl0);
+
+                const driveId = this.getDriveId(safeUrl);
+                const guessMime = mime || this.guessMimeFromName(name) || this.guessMimeFromName(safeUrl);
+                const label = name || (isMaterial ? 'Material' : 'Archivo');
+
+                // Preferir embebido dentro del HTML
+                let embed = '';
+
+                // Si es Drive, casi siempre embebemos con preview (evita pelear con CORS)
+                if(driveId) {
+                    const previewUrl = `https://drive.google.com/file/d/${driveId}/preview`;
+                    embed = `<div class="media-preview"><iframe src="${previewUrl}" allow="autoplay"></iframe><div class="media-meta"><small>${label}</small><a href="${safeUrl}" target="_blank" style="color:var(--gold); text-decoration:none;"><i class="fas fa-external-link-alt"></i> Abrir</a></div></div>`;
+                    return embed;
+                }
+
+                if(guessMime.startsWith('image/')) {
+                    embed = `<div class="media-preview"><img src="${safeUrl}" alt="${label}"><div class="media-meta"><small>${label}</small><a href="${safeUrl}" target="_blank" style="color:var(--gold); text-decoration:none;"><i class="fas fa-download"></i> Abrir</a></div></div>`;
+                } else if(guessMime.startsWith('video/')) {
+                    embed = `<div class="media-preview"><video controls src="${safeUrl}"></video><div class="media-meta"><small>${label}</small><a href="${safeUrl}" target="_blank" style="color:var(--gold); text-decoration:none;"><i class="fas fa-download"></i> Abrir</a></div></div>`;
+                } else if(guessMime.startsWith('audio/')) {
+                    embed = `<div class="media-preview"><audio controls src="${safeUrl}"></audio><div class="media-meta"><small>${label}</small><a href="${safeUrl}" target="_blank" style="color:var(--gold); text-decoration:none;"><i class="fas fa-download"></i> Abrir</a></div></div>`;
+                } else if(guessMime === 'application/pdf') {
+                    embed = `<div class="media-preview"><iframe src="${safeUrl}"></iframe><div class="media-meta"><small>${label}</small><a href="${safeUrl}" target="_blank" style="color:var(--gold); text-decoration:none;"><i class="fas fa-download"></i> Abrir</a></div></div>`;
+                } else {
+                    embed = `<a href="${safeUrl}" target="_blank" style="color:var(--gold); display:block; margin-top:10px;"><i class="fas fa-paperclip"></i> ${label}</a>`;
+                }
+                return embed;
+            },
+
+            // --- AULA (MÓDULOS / SEMANAS) ---
+            getAulaItems: function() {
+                // Fuente de verdad: el Sheet (API). El cache local solo se usa si el SYNC falla.
+                const hasApi = (this.data && Array.isArray(this.data.aula));
+                const items = hasApi ? this.data.aula : (this._syncOk ? [] : (this._aulaCache || []));
+
+                // Filtrar por instrumento (o GENERAL)
+                const inst = String(this.user.inst||'GENERAL').toUpperCase();
+                return items.filter(it => {
+                    const i = String(it.inst || it.instrumento || 'GENERAL').toUpperCase();
+                    return i === 'GENERAL' || i === inst;
+                }).slice().reverse();
+            },
+
+            // --- ESTADO DE MÓDULO (verde/naranja/rojo) ---
+            getModuloEstado: function(modulo) {
+                const inst = String(this.user.inst||'GENERAL').toUpperCase();
+                const mod = String(modulo||'').trim();
+                const key = this.localKey('modEstado', inst + '::' + mod);
+
+                // 1) Backend (si existe)
+                let estado = '';
+                try {
+                    const list = (this.data && Array.isArray(this.data.moduloEstados)) ? this.data.moduloEstados : [];
+                    const hit = list.find(x => String(x.inst||'').toUpperCase() === inst && String(x.modulo||'') === mod);
+                    if(hit && hit.estado) estado = String(hit.estado);
+                } catch(e) {}
+
+                // 2) Fallback local
+                if(!estado) {
+                    try { estado = localStorage.getItem(key) || ''; } catch(e) {}
+                }
+
+                estado = String(estado || 'ABIERTO').toUpperCase();
+
+                let cls = 'green', label = 'ABIERTO';
+                if(estado.includes('NARAN')) { cls = 'orange'; label = 'A PUNTO DE CERRAR'; }
+                if(estado.includes('ROJ') || estado.includes('CERR')) { cls = 'red'; label = 'CERRADO'; }
+
+                return { estado: label, cls: cls };
+            },
+
+            setModuloEstado: async function(modulo, estado) {
+                const inst = String(this.user.inst||'GENERAL').toUpperCase();
+                const mod = String(modulo||'').trim();
+                const key = this.localKey('modEstado', inst + '::' + mod);
+
+                // Guardar local inmediato (para que no "parpadee")
+                try { localStorage.setItem(key, String(estado||'')); } catch(e) {}
+
+                // Intento backend
+                try {
+                    await this.postData({ accion:'setModuloEstado', autor:this.user.id, inst:inst, modulo:mod, estado:String(estado||'') });
+                    // Refresh para que todos los dispositivos lo vean
+                    await this.syncData(false);
+                } catch(e) {
+                    // Si el backend no soporta, al menos queda local.
+                }
+            },
+
+            // --- BORRAR MÓDULO COMPLETO (solo profesor/admin) ---
+            eliminarModulo: async function(modulo) {
+                const isTeacher = (this.user.role !== 'ALUMNO');
+                if(!isTeacher) return;
+
+                const inst = String(this.user.inst||'GENERAL').toUpperCase();
+                const mod = String(modulo||'').trim();
+                if(!mod) return;
+
+                const resp = await Swal.fire({
+                    title: 'Eliminar módulo',
+                    html: `<b>${this.escapeHtml(mod)}</b><br><small>Esto eliminará TODO el material de este módulo (semanas y archivos) del sistema.</small>`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar',
+                    background:'#111', color:'#fff'
+                });
+
+                if(!resp.isConfirmed) return;
+
+                this.loading(true);
+
+                let ok = false;
+                let serverErr = '';
+
+                // 1) Intento servidor (si existe la acción)
+                try {
+                    const r = await this.postData({ accion:'eliminarModulo', autor:this.user.id, inst:inst, modulo:mod });
+                    if(r && r.ok) {
+                        // Refrescar para verificar en todos los dispositivos
+                        await this.syncData(false);
+                        // Verificación: ¿ya no existe material de ese módulo?
+                        const all = (this.data && Array.isArray(this.data.aula)) ? this.data.aula : [];
+                        const still = all.some(it => String(it.inst||it.instrumento||'GENERAL').toUpperCase()===inst &&
+                                                    String(it.modulo||it.mod||'').trim()===mod);
+                        ok = !still;
+                    } else if (r && r.error) {
+                        serverErr = String(r.error);
+                    }
+                } catch(e) {
+                    serverErr = String(e);
+                }
+
+                // 2) Fallback local (por si el backend aún no tiene la acción)
+                if(!ok) {
+                    try{
+                        const key = this.localKey('modDeleted', inst);
+                        const arr = JSON.parse(localStorage.getItem(key)||'[]');
+                        if(!arr.includes(mod)) arr.push(mod);
+                        localStorage.setItem(key, JSON.stringify(arr));
+                    }catch(e){}
+                    this.renderAula();
+                }
+
+                this.loading(false);
+
+                Swal.fire({
+                    icon: ok ? 'success' : 'warning',
+                    title: ok ? 'Módulo eliminado' : 'Módulo ocultado',
+                    text: ok ? 'Se eliminó para todos los dispositivos.' : (serverErr ? ('No se pudo eliminar en servidor: ' + serverErr + '. Se ocultó solo en este dispositivo.') : 'No se pudo eliminar en servidor, se ocultó solo en este dispositivo.'),
+                    background:'#111', color:'#fff'
+                });
+            },
+
+            isModuloDeleted: function(modulo) {
+                const inst = String(this.user.inst||'GENERAL').toUpperCase();
+                const mod = String(modulo||'').trim();
+                if(!mod) return false;
+                try{
+                    const key = this.localKey('modDeleted', inst);
+                    const arr = JSON.parse(localStorage.getItem(key)||'[]');
+                    return Array.isArray(arr) && arr.includes(mod);
+                }catch(e){}
+                return false;
+            },
+
+
+            toggleAulaMaterial: function(id) {
+                const el = document.getElementById(id);
+                if(!el) return;
+                el.classList.toggle('show');
+            },
+
+
+            renderAula: function() {
+                const wrap = document.getElementById('aula-list');
+                if(!wrap) return;
+
+                const items = this.getAulaItems();
+                if(items.length === 0) {
+                    wrap.innerHTML = "<p style='color:#666'>Todavía no hay módulos/materiales publicados aquí.</p>";
+                    return;
+                }
+
+                // Agrupar por Módulo y Semana
+                const grouped = {};
+                for(const it of items) {
+                    const mod = String(it.modulo || it.mod || 'Módulo').trim();
+                    const sem = String(it.semana || it.sem || 'Semana').trim();
+                    grouped[mod] = grouped[mod] || {};
+                    grouped[mod][sem] = grouped[mod][sem] || [];
+                    grouped[mod][sem].push(it);
+                }
+
+                let out = '';
+                let modN = 0;
+
+                const isTeacher = (this.user.role !== 'ALUMNO');
+
+                for(const mod of Object.keys(grouped)) {
+                    if(this.isModuloDeleted(mod)) continue;
+                    modN += 1;
+                    const estadoInfo = this.getModuloEstado(mod);
+                    const dotCls = estadoInfo.cls;
+
+                    // Cabecera de módulo con estado (y selector para docentes)
+                    let headRight = `
+                        <span class="mod-state-pill">
+                            <span class="mod-dot ${dotCls}"></span>
+                            <span>${estadoInfo.estado}</span>
+                        </span>
+                    `;
+
+                    if(isTeacher) {
+                        headRight += `
+                            <select class="mod-select" onchange="app.setModuloEstado('${this.escapeJs(mod)}', this.value)">
+                                <option value="ABIERTO" ${estadoInfo.cls==='green'?'selected':''}>🟢 Abierto</option>
+                                <option value="NARANJA" ${estadoInfo.cls==='orange'?'selected':''}>🟠 A punto de cerrar</option>
+                                <option value="ROJO" ${estadoInfo.cls==='red'?'selected':''}>🔴 Cerrado</option>
+                            </select>
+                            <button class="mod-del-btn" title="Eliminar módulo" onclick="app.eliminarModulo('${this.escapeJs(mod)}')"><i class="fas fa-trash"></i></button>
+                        `;
+                    }
+
+                    out += `<div class="aula-module-block">
+                                <div class="aula-module-head">
+                                    <div class="aula-module-title">${mod}</div>
+                                    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
+                                        ${headRight}
+                                    </div>
+                                </div>
+                    `;
+
+                    // Ordenar semanas por número si aplica
+                    const semanas = Object.keys(grouped[mod]).slice().sort((a,b)=>{
+                        const na = parseInt(String(a).replace(/\D/g,'')) || 0;
+                        const nb = parseInt(String(b).replace(/\D/g,'')) || 0;
+                        return na - nb;
+                    });
+
+                    for(const sem of semanas) {
+                        const arr = grouped[mod][sem];
+
+                        // Card "tipo Aula Virtual" (1 card por semana)
+                        const first = arr[0] || {};
+                        const cardTitle = String(first.titulo || 'Material').trim();
+                        let cardDesc = String(first.desc || '').trim();
+                        if(arr.length > 1) {
+                            cardDesc = (cardDesc ? (cardDesc + ' ') : '') + `(${arr.length} recursos en total)`;
+                        }
+
+                        const matId = `aula-mat-${modN}-${String(sem).replace(/[^a-zA-Z0-9_-]/g,'_')}`;
+
+                        // Body material: todos los items de la semana
+                        let mats = '';
+                        for(const it of arr) {
+                            const t = String(it.titulo || 'Recurso').trim();
+                            const d = String(it.desc || '').trim();
+                            const url = it.archivoUrl || it.url || it.link || '';
+                            const nm = it.archivoNombre || it.nombre || '';
+                            const mm = it.archivoMime || it.mime || '';
+                            const fileBlock = url ? this.renderFileBlock(url, nm, mm, true) : '';
+
+                            mats += `
+                                <div style="padding:12px; border:1px solid rgba(255,255,255,0.06); border-radius:14px; margin-bottom:12px;">
+                                    <div style="font-weight:800; margin-bottom:6px;">${t}</div>
+                                    ${d ? `<div style="color:#aaa; margin-bottom:10px;">${d}</div>` : ''}
+                                    ${fileBlock}
+                                </div>
+                            `;
+                        }
+
+                        const weekLabel = (String(sem).toLowerCase().includes('semana')) ? sem : ('Semana ' + sem);
+
+                        out += `
+                            <div class="aula-card">
+                                <div class="aula-card-top">
+                                    <div class="aula-chip">${mod}</div>
+                                    <div class="aula-week">${weekLabel}</div>
+                                </div>
+                                <h3 class="aula-title">${cardTitle}</h3>
+                                ${cardDesc ? `<p class="aula-desc">${cardDesc}</p>` : ''}
+                                <button class="aula-btn" onclick="app.toggleAulaMaterial('${matId}')">
+                                    <i class="fas fa-folder-open"></i> Ver Material
+                                </button>
+
+                                <div class="aula-mat" id="${matId}">
+                                    ${mats}
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    out += `</div>`;
+                }
+
+                wrap.innerHTML = out;
+            },
+
+            toggleAcc: function(id) {
+                const el = document.getElementById(id);
+                if(!el) return;
+                el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+            },
+
+            publicarMaterial: async function() {
+                const modulo = document.getElementById('aula-modulo').value.trim();
+                const semana = document.getElementById('aula-semana').value.trim();
+                const titulo = document.getElementById('aula-titulo').value.trim();
+                const desc = document.getElementById('aula-desc').value.trim();
+                const file = document.getElementById('aula-file').files[0];
+
+                if(!modulo || !semana || !titulo) return Swal.fire({title:'Faltan Datos', text:'Módulo, Semana y Título son obligatorios.', icon:'warning', background:'#111', color:'#fff'});
+
+                this.loading(true);
+
+                let b64 = '', fname = '', mime = '';
+                if(file) {
+                    b64 = await this.fileToBase64(file);
+                    fname = file.name;
+                    mime = file.type || this.guessMimeFromName(fname);
+                }
+
+                // 1) Intento backend
+                await this.postData({
+                    accion:'publicarMaterialAula',
+                    autor: this.user.id,
+                    inst: this.user.inst,
+                    modulo, semana, titulo, desc,
+                    archivoB64: b64, archivoNombre: fname, archivoMime: mime
+                });
+
+                // 2) Fallback local (solo metadata; dataURL si es chico)
+                try {
+                    const k = `cc_aula_${this.user.inst}`;
+                    const current = JSON.parse(localStorage.getItem(k) || '[]');
+                    let localUrl = '';
+                    if(file && b64 && b64.length < 900000 && mime) {
+                        localUrl = `data:${mime};base64,${b64}`;
+                    }
+                    current.push({inst:this.user.inst, modulo, semana, titulo, desc, archivoUrl: localUrl, archivoNombre: fname, archivoMime: mime, autor:this.user.id, fecha:new Date().toISOString()});
+                    localStorage.setItem(k, JSON.stringify(current));
+                    this._aulaCache = current;
+                } catch(e) {}
+
+                // 3) Refrescar API (si el backend ya existe)
+                try {
+                    await new Promise(r => setTimeout(r, 700));
+                    const refresh = await fetch(`${API_URL}?op=traerTodo&ts=${Date.now()}`);
+                    this.data = await refresh.json();
+                        this.normalizeServerPayload();
+                        this.refreshCurrentAvatar();
+                } catch(e) {}
+
+                this.renderAula();
+                this.loading(false);
+
+                Swal.fire({icon:'success', title:'Publicado', background:'#111', color:'#fff'});
+                document.getElementById('aula-file').value = '';
+            },
+            // --- UTILITIES ---
+            
+            // --- RESUMEN DE REPORTES (Solo Admin / CEO) ---
+            _repView: [],
+
+            parseReportDate_: function(s) {
+                const str = String(s||'').trim();
+                if(!str) return null;
+                // ISO típico: 2026-02-11T23:00:00
+                if(str.includes('T') || str.includes('-')) {
+                    const d = new Date(str);
+                    if(!isNaN(d.getTime())) return d;
+                }
+                // dd/MM/yyyy o dd/MM/yyyy HH:mm:ss
+                const m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+                if(m) {
+                    const dd = parseInt(m[1],10), mm = parseInt(m[2],10)-1, yy = parseInt(m[3],10);
+                    const hh = m[4]?parseInt(m[4],10):0, mi = m[5]?parseInt(m[5],10):0, ss = m[6]?parseInt(m[6],10):0;
+                    const d = new Date(yy, mm, dd, hh, mi, ss);
+                    if(!isNaN(d.getTime())) return d;
+                }
+                return null;
+            },
+
+            renderResumenReportes: function(applyFilters=false) {
+                const stats = document.getElementById('rep-sum-stats');
+                const top = document.getElementById('rep-sum-top');
+                const list = document.getElementById('rep-sum-list');
+                const selPro = document.getElementById('rep-sum-profe');
+                const selAlu = document.getElementById('rep-sum-alumno');
+                const inpFrom = document.getElementById('rep-sum-from');
+                const inpTo = document.getElementById('rep-sum-to');
+                if(!stats || !top || !list || !selPro || !selAlu || !inpFrom || !inpTo) return;
+
+                const isAdmin = (this.user.role === 'ADMIN' || this.user.role === 'CEO');
+                if(!isAdmin) {
+                    stats.innerHTML = '';
+                    top.innerHTML = '';
+                    list.innerHTML = "<p style='color:#666'>Solo ADMIN / CEO.</p>";
+                    return;
+                }
+
+                const users = (this.data && Array.isArray(this.data.usuarios)) ? this.data.usuarios : [];
+                const reportes = (this.data && Array.isArray(this.data.reportes)) ? this.data.reportes : [];
+
+                const getRol = (u) => String(u[2]||'').toUpperCase();
+                const getNombre = (u) => String(u[3]||u[0]||'').trim();
+                const getInst = (u) => String(u[6]||'GENERAL').toUpperCase();
+                const getId = (u) => String(u[0]||'').toUpperCase();
+
+                const uMap = {};
+                users.forEach(u => {
+                    const id = getId(u);
+                    uMap[id] = { id, nombre: getNombre(u), rol: getRol(u), inst: getInst(u) };
+                });
+
+                // Poblar selects una sola vez (o si applyFilters pide refresh)
+                const prevPro = selPro.value || '';
+                const prevAlu = selAlu.value || '';
+
+                if(selPro.options.length < 2 || applyFilters) {
+                    selPro.innerHTML = `<option value="">TODOS</option>`;
+                    users.filter(u => getRol(u) !== 'ALUMNO').forEach(u => {
+                        const id = getId(u);
+                        const nm = getNombre(u);
+                        const opt = document.createElement('option');
+                        opt.value = id;
+                        opt.textContent = `${nm} (${getInst(u)})`;
+                        selPro.appendChild(opt);
+                    });
+                    selPro.value = prevPro;
+                }
+
+                if(selAlu.options.length < 2 || applyFilters) {
+                    selAlu.innerHTML = `<option value="">TODOS</option>`;
+                    users.filter(u => getRol(u) === 'ALUMNO').forEach(u => {
+                        const id = getId(u);
+                        const nm = getNombre(u);
+                        const opt = document.createElement('option');
+                        opt.value = id;
+                        opt.textContent = `${nm} (${getInst(u)})`;
+                        selAlu.appendChild(opt);
+                    });
+                    selAlu.value = prevAlu;
+                }
+
+                const fPro = String(selPro.value||'').toUpperCase();
+                const fAlu = String(selAlu.value||'').toUpperCase();
+                const fromV = inpFrom.value ? new Date(inpFrom.value + 'T00:00:00') : null;
+                const toV = inpTo.value ? new Date(inpTo.value + 'T23:59:59') : null;
+
+                // Filtrar
+                const filtered = reportes.filter(r => {
+                    const prof = String(r.profe||r.profesor||'').toUpperCase();
+                    const alu = String(r.alumno||'').toUpperCase();
+
+                    if(fPro && prof !== fPro) return false;
+                    if(fAlu && alu !== fAlu) return false;
+
+                    const d = this.parseReportDate_(r.fecha);
+                    if(fromV && d && d < fromV) return false;
+                    if(toV && d && d > toV) return false;
+                    return true;
+                }).slice().sort((a,b) => {
+                    const da = this.parseReportDate_(a.fecha);
+                    const db = this.parseReportDate_(b.fecha);
+                    return (db?db.getTime():0) - (da?da.getTime():0);
+                });
+
+                this._repView = filtered;
+
+                const num = (v) => {
+                    const n = parseFloat(String(v||'').replace(',', '.'));
+                    return isNaN(n) ? null : n;
+                };
+
+                const total = filtered.length;
+                const niveles = filtered.map(r => num(r.nivel)).filter(v => v!==null);
+                const avgNivel = niveles.length ? (niveles.reduce((a,b)=>a+b,0)/niveles.length) : null;
+
+                const profCount = {};
+                const aluCount = {};
+                filtered.forEach(r => {
+                    const prof = String(r.profe||r.profesor||'').toUpperCase();
+                    const alu = String(r.alumno||'').toUpperCase();
+                    profCount[prof] = (profCount[prof]||0)+1;
+                    aluCount[alu] = (aluCount[alu]||0)+1;
+                });
+
+                const uniqPro = Object.keys(profCount).length;
+                const uniqAlu = Object.keys(aluCount).length;
+
+                stats.innerHTML = `
+                    <div class="task-card" style="border-left-color:var(--gold);">
+                        <div style="color:#aaa; font-size:.85rem;">TOTAL REPORTES</div>
+                        <div style="font-size:1.8rem; font-weight:800;">${total}</div>
+                    </div>
+                    <div class="task-card" style="border-left-color:var(--success);">
+                        <div style="color:#aaa; font-size:.85rem;">PROFESORES</div>
+                        <div style="font-size:1.8rem; font-weight:800;">${uniqPro}</div>
+                    </div>
+                    <div class="task-card" style="border-left-color:#f59e0b;">
+                        <div style="color:#aaa; font-size:.85rem;">ALUMNOS</div>
+                        <div style="font-size:1.8rem; font-weight:800;">${uniqAlu}</div>
+                    </div>
+                    <div class="task-card" style="border-left-color:#60a5fa;">
+                        <div style="color:#aaa; font-size:.85rem;">PROMEDIO NIVEL</div>
+                        <div style="font-size:1.8rem; font-weight:800;">${avgNivel===null ? '—' : avgNivel.toFixed(1)}</div>
+                    </div>
+                `;
+
+                const topN = (obj, n=6) => Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,n);
+
+                const topProfHtml = topN(profCount, 6).map(([id,c]) => {
+                    const u = uMap[id] || {nombre:id, inst:'—'};
+                    return `<div style="display:flex; justify-content:space-between; gap:12px;"><span>${this.escapeHtml(u.nombre)} <span style="color:#666">(${u.inst})</span></span><b>${c}</b></div>`;
+                }).join('');
+
+                const topAluHtml = topN(aluCount, 6).map(([id,c]) => {
+                    const u = uMap[id] || {nombre:id, inst:'—'};
+                    return `<div style="display:flex; justify-content:space-between; gap:12px;"><span>${this.escapeHtml(u.nombre)} <span style="color:#666">(${u.inst})</span></span><b>${c}</b></div>`;
+                }).join('');
+
+                top.innerHTML = `
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                        <div class="task-card" style="border-left-color:var(--gold);">
+                            <div style="font-weight:700; margin-bottom:8px;">Top Profesores</div>
+                            <div style="color:#aaa; font-size:.9rem;">${topProfHtml || '<span style="color:#666">—</span>'}</div>
+                        </div>
+                        <div class="task-card" style="border-left-color:var(--gold);">
+                            <div style="font-weight:700; margin-bottom:8px;">Top Alumnos</div>
+                            <div style="color:#aaa; font-size:.9rem;">${topAluHtml || '<span style="color:#666">—</span>'}</div>
+                        </div>
+                    </div>
+                `;
+
+                if(total === 0) {
+                    list.innerHTML = "<p style='color:#666'>No hay reportes con esos filtros.</p>";
+                    return;
+                }
+
+                const fmt = (d) => d ? d.toLocaleString() : '';
+
+                list.innerHTML = filtered.slice(0, 60).map((r, i) => {
+                    const profId = String(r.profe||r.profesor||'').toUpperCase();
+                    const aluId = String(r.alumno||'').toUpperCase();
+                    const prof = uMap[profId] ? uMap[profId].nombre : profId;
+                    const alu = uMap[aluId] ? uMap[aluId].nombre : aluId;
+                    const d = this.parseReportDate_(r.fecha);
+                    const nivel = String(r.nivel||'').trim();
+                    const obs = String(r.obs||r.observaciones||'').trim();
+
+                    const links = [
+                        r.f1 ? `<a class="badge bg-gold" target="_blank" href="${this.driveToDirect(r.f1)}">CLASE</a>` : '',
+                        r.f2 ? `<a class="badge bg-gold" target="_blank" href="${this.driveToDirect(r.f2)}">TEORÍA</a>` : '',
+                        r.f3 ? `<a class="badge bg-gold" target="_blank" href="${this.driveToDirect(r.f3)}">PRÁCTICA</a>` : ''
+                    ].filter(Boolean).join(' ');
+
+                    return `
+                        <div class="task-card" style="border-left-color:${nivel? 'var(--gold)':'#333'};">
+                            <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
+                                <div>
+                                    <div style="color:#666; font-size:.8rem;">${this.escapeHtml(fmt(d) || String(r.fecha||''))}</div>
+                                    <div style="margin-top:4px;"><b>${this.escapeHtml(prof)}</b> <span style="color:#666">→</span> ${this.escapeHtml(alu)}</div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <div class="badge bg-gold" style="background:#2a2a2a; color:#fff;">Nivel: ${this.escapeHtml(nivel || '—')}</div>
+                                    <div style="margin-top:8px;">
+                                        <button class="btn" style="padding:10px 12px; font-size:.85rem;" onclick="app.verReporte(${i})">Ver</button>
+                                    </div>
+                                </div>
+                            </div>
+                            ${obs ? `<div style="margin-top:10px; color:#ddd;">${this.escapeHtml(obs)}</div>` : ''}
+                            ${links ? `<div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">${links}</div>` : ''}
+                        </div>
+                    `;
+                }).join('');
+            },
+
+            verReporte: function(i) {
+                const r = (this._repView && this._repView[i]) ? this._repView[i] : null;
+                if(!r) return;
+
+                const prof = String(r.profe||r.profesor||'');
+                const alu = String(r.alumno||'');
+                const nivel = String(r.nivel||'');
+                const obs = String(r.obs||r.observaciones||'');
+                const d = this.parseReportDate_(r.fecha);
+                const fecha = d ? d.toLocaleString() : String(r.fecha||'');
+
+                const mkLink = (label, url) => url ? `<a target="_blank" href="${this.driveToDirect(url)}" style="color:#D4AF37; text-decoration:none;">${label}</a>` : `<span style="color:#666">${label}: —</span>`;
+
+                Swal.fire({
+                    title: 'Detalle del Reporte',
+                    html: `
+                        <div style="text-align:left;">
+                            <div style="color:#666; font-size:.85rem;">${this.escapeHtml(fecha)}</div>
+                            <div style="margin-top:8px;"><b>Profesor:</b> ${this.escapeHtml(prof)}</div>
+                            <div><b>Alumno:</b> ${this.escapeHtml(alu)}</div>
+                            <div><b>Nivel:</b> ${this.escapeHtml(nivel || '—')}</div>
+                            <div style="margin-top:10px;"><b>Observaciones:</b><br><span style="color:#ddd;">${this.escapeHtml(obs || '—')}</span></div>
+                            <div style="margin-top:12px; display:flex; gap:12px; flex-wrap:wrap;">
+                                ${mkLink('📸 Clase', r.f1)}
+                                ${mkLink('📸 Teoría', r.f2)}
+                                ${mkLink('📸 Práctica', r.f3)}
+                            </div>
+                        </div>
+                    `,
+                    background:'#111', color:'#fff',
+                    confirmButtonText: 'Cerrar'
+                });
+            },
+
+postData: async function(data) {
+                // Prefer "simple request" (text/plain) to evitar preflight y poder LEER la respuesta.
+                try {
+                    const res = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify(data)
+                    });
+                    const txt = await res.text();
+                    try { return JSON.parse(txt); } catch(e) { return { ok: true, raw: txt }; }
+                } catch (e) {
+                    // Fallback fire-and-forget (no-cors). Luego se verifica con syncData.
+                    try {
+                        await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+                        return { ok: true, noCors: true };
+                    } catch (e2) {
+                        console.error(e2);
+                        return { ok: false, error: String(e2) };
+                    }
+                }
+            },
+
+            // Compresión Inteligente para Imágenes (Reportes/Perfil/Tareas)
+// - Evita que el upload "se haga" pero en realidad no llegue al backend por tamaño.
+// - No escala hacia arriba (solo reduce).
+compressImage: function(file, opts) {
+    const o = opts || {};
+    const maxW = o.maxW || 1400;
+    const quality = (o.quality === 0 || o.quality) ? o.quality : 0.72;
+
+    return new Promise((resolve, reject) => {
+        try {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (e) => {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+
+                    const scale = Math.min(1, maxW / (img.width || maxW));
+                    canvas.width = Math.max(1, Math.round((img.width || maxW) * scale));
+                    canvas.height = Math.max(1, Math.round((img.height || maxW) * scale));
+
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    resolve(canvas.toDataURL('image/jpeg', quality).split(',')[1]);
+                };
+                img.onerror = () => resolve('');
+            };
+            reader.onerror = () => resolve('');
+        } catch(err) { resolve(''); }
+    });
+},
+
+// Base64 "inteligente":
+// - Si es imagen: comprime a JPG para que el backend realmente reciba el archivo.
+// - Si es otro tipo: base64 normal (pero con límite de tamaño).
+fileToBase64: async function(file) {
+    if(!file) return '';
+    const isImg = String(file.type || '').toLowerCase().startsWith('image/');
+    // PDFs/videos grandes revientan Apps Script. Mantengamos esto bajo control.
+    const hardLimit = 9 * 1024 * 1024; // 9MB (antes de base64)
+    if(!isImg && file.size > hardLimit) {
+        await Swal.fire({title:'Archivo muy pesado', text:'Ese archivo es demasiado grande para subirse por esta vía. Usa un archivo más liviano o una imagen comprimida.', icon:'warning', background:'#111', color:'#fff'});
+        return '';
+    }
+    if(isImg) {
+        const b = await this.compressImage(file, {maxW: 1400, quality: 0.72});
+        return b || '';
+    }
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+            const res = reader.result || '';
+            const parts = String(res).split(',');
+            resolve(parts.length > 1 ? parts[1] : parts[0]);
+        };
+        reader.onerror = () => resolve('');
+    });
+}
+        };
+
+        // INICIAR
+        window.onload = () => app.init();
+    </script>
+</body>
+</html>
