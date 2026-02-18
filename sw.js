@@ -1,6 +1,6 @@
 /* Cloud Campus - Service Worker (cache solo assets estáticos)
    No cachea la API (Apps Script) para evitar datos viejos. */
-const CACHE_NAME = 'cloud-campus-v1';
+const CACHE_NAME = 'cloud-campus-v2';
 const STATIC_ASSETS = [
   './',
   './index.html',
